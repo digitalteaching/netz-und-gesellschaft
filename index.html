@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Netz und Gesellschaft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Overpass:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F3;
+  --surface:#FFFFFF;
+  --ink:#16202A;
+  --ink-2:#465363;
+  --ink-3:#6E7B89;
+  --rule:#D2D9E0;
+  --c1:#1565C0;
+  --c2:#B0175A;
+  --c3:#A85400;
+  --c4:#2E7D32;
+  --c5:#6A3FC0;
+  --c6:#37474F;
+  --ok:#2E7D32;
+  --ok-bg:#E6F2E7;
+  --bad:#B3261E;
+  --bad-bg:#FBE9E7;
+  --sans:"Overpass", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif:"Literata", Georgia, "Times New Roman", serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #1565C0;outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+[tabindex="-1"]:focus{outline:none}
+
+/* Kopfzeile */
+.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--rule)}
+.top-in{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:24px}
+.brand{font-weight:800;font-size:19px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.brand svg{flex:none}
+.who{margin-left:auto;display:flex;gap:20px;color:var(--ink-2);font-size:15px}
+.who strong{color:var(--ink);font-weight:700}
+
+/* Raster */
+.shell{max-width:1240px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:270px minmax(0,1fr);gap:48px}
+main{padding:40px 0 80px;min-width:0}
+
+/* Linienplan */
+.map{position:sticky;top:76px;align-self:start;padding:40px 0}
+.map ol{list-style:none;margin:0;padding:0;position:relative}
+.map ol::before{content:"";position:absolute;left:13px;top:14px;bottom:14px;width:6px;border-radius:3px;background:var(--ink)}
+.map li{position:relative;margin:0 0 6px}
+.stop{display:flex;align-items:flex-start;gap:14px;width:100%;text-align:left;background:none;border:0;padding:6px 8px 6px 0;cursor:pointer;border-radius:8px}
+.stop:hover .stop-name{text-decoration:underline;text-underline-offset:3px}
+.dot{flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);border:5px solid var(--ink);position:relative;z-index:1;display:grid;place-items:center;font-weight:800;font-size:13px;transition:transform .15s}
+.stop[aria-current="step"] .dot{transform:scale(1.18);box-shadow:0 0 0 4px var(--paper),0 0 0 7px var(--c,var(--ink))}
+.stop.done .dot{background:var(--c);border-color:var(--c);color:#fff}
+.stop.done .dot::after{content:"";width:9px;height:14px;border:solid #fff;border-width:0 3px 3px 0;transform:translateY(-2px) rotate(45deg)}
+.stop.done .dot span{display:none}
+.term{--c:var(--ink)}
+.term .dot{border-radius:7px;background:var(--ink);color:#fff}
+.stop-txt{display:flex;flex-direction:column;padding-top:4px;min-width:0}
+.stop-sub{font-size:13px;color:var(--ink-3)}
+.stop-name{font-size:15px;font-weight:600;line-height:1.3}
+.stop[aria-current="step"] .stop-name{font-weight:800}
+.stop.locked{opacity:.55}
+.map-note{margin:22px 0 0 46px;font-size:13px;color:var(--ink-3)}
+
+/* Ansichten */
+.view{max-width:760px}
+.sign{display:flex;align-items:center;gap:16px;background:var(--c);color:#fff;border-radius:12px;padding:14px 22px 12px 14px}
+.sign-num{flex:none;width:44px;height:44px;border-radius:50%;background:#fff;color:var(--c);display:grid;place-items:center;font-weight:800;font-size:22px}
+.sign h2{margin:0;font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.015em;line-height:1.15}
+.sign small{display:block;font-size:14px;font-weight:600;opacity:.85}
+.guide{margin:18px 0 0;font-size:18px;font-weight:600;color:var(--ink);max-width:62ch}
+h3{font-size:20px;font-weight:800;margin:0 0 6px;letter-spacing:-.01em}
+.read{font-family:var(--serif);font-size:18px;line-height:1.7;max-width:64ch;margin:28px 0 0}
+.read p{margin:0 0 1em}
+.src{font-family:var(--sans);font-size:13px;color:var(--ink-3);margin-top:-4px}
+
+.task{background:var(--surface);border:1px solid var(--rule);border-top:5px solid var(--c);border-radius:4px 4px 12px 12px;padding:24px 26px;margin:32px 0 0}
+.task > p{margin:0 0 14px;color:var(--ink-2);max-width:66ch}
+.after{margin:20px 0 0;padding:18px 22px;border-radius:10px;background:color-mix(in srgb,var(--c) 9%,#fff);border:1px solid color-mix(in srgb,var(--c) 30%,#fff)}
+.after h4{margin:0 0 6px;font-size:16px;font-weight:800;color:var(--c)}
+.after p{margin:0 0 .7em;max-width:66ch}
+.after p:last-child{margin-bottom:0}
+
+.notes{margin:32px 0 0;padding:22px 26px;border:2px dashed var(--rule);border-radius:12px;background:#F8FAFB}
+.notes h3{font-size:17px}
+.notes > p{margin:0 0 14px;color:var(--ink-2);font-size:15px}
+.notes label{display:block;font-weight:700;font-size:15px;margin:12px 0 4px}
+.notes textarea{width:100%;min-height:58px;border:1px solid var(--rule);border-radius:8px;padding:10px 12px;resize:vertical;background:#fff;font-family:var(--sans)}
+
+.foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:32px 0 0}
+.foot .hint{color:var(--ink-3);font-size:15px}
+.btn{appearance:none;border:0;border-radius:999px;background:var(--ink);color:#fff;font-weight:700;padding:12px 24px;cursor:pointer;font-size:16px}
+.btn:hover{background:#2C3A48}
+.btn[disabled]{background:#B7C0C9;cursor:not-allowed}
+.btn-q{appearance:none;border:2px solid var(--ink);background:transparent;border-radius:999px;font-weight:700;padding:8px 18px;cursor:pointer;font-size:15px}
+.btn-q:hover{background:#fff}
+.btn-q[disabled]{opacity:.4;cursor:not-allowed}
+.btn-s{appearance:none;border:1px solid var(--rule);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;font-weight:600}
+.btn-s:hover{border-color:var(--ink-3)}
+.btn-s[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* Start */
+.hero h1{font-size:clamp(34px,5vw,54px);line-height:1.02;font-weight:800;letter-spacing:-.03em;margin:0}
+.hero .lede{font-family:var(--serif);font-size:20px;line-height:1.6;max-width:58ch;margin:20px 0 0;color:var(--ink-2)}
+.steps{list-style:none;margin:28px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;max-width:720px;counter-reset:s}
+.steps li{position:relative;padding:44px 12px 0 0;font-size:15px;color:var(--ink-2);counter-increment:s}
+.steps li strong{display:block;color:var(--ink);font-size:16px}
+.steps li::before{content:counter(s);position:absolute;top:0;left:0;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;z-index:1}
+.steps li::after{content:"";position:absolute;top:12px;left:0;right:0;height:6px;background:var(--ink)}
+.steps li:last-child::after{right:auto;width:30px}
+.form{margin:36px 0 0;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:24px 26px;max-width:620px}
+.form .row{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.form label{display:block;font-weight:700;font-size:15px;margin:0 0 4px}
+.form input{width:100%;border:1px solid var(--rule);border-radius:8px;padding:10px 12px;background:#fff}
+.form .err{color:var(--bad);font-size:14px;margin:10px 0 0}
+.quiet{margin:20px 0 0;max-width:620px;font-size:15px;color:var(--ink-2);display:flex;gap:12px;align-items:flex-start}
+.quiet svg{flex:none;margin-top:2px}
+
+/* Netz-Experiment */
+.nets{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.net{border:1px solid var(--rule);border-radius:10px;padding:12px 12px 14px;background:#FAFBFC}
+.net h4{margin:0 0 2px;font-size:16px}
+.net svg{width:100%;height:auto;display:block}
+.net .status{font-size:14px;color:var(--ink-2);min-height:42px;margin:4px 0 8px}
+.net .status b{color:var(--ink)}
+.node{cursor:pointer}
+.node circle{fill:#fff;stroke:var(--ink);stroke-width:3}
+.node rect{fill:var(--ink)}
+.node:hover circle{fill:#E3ECF7}
+.node:focus{outline:none}
+.node:focus-visible circle{stroke:#1565C0;stroke-width:5}
+.node.off circle{fill:var(--bad);stroke:var(--bad)}
+.node.off rect{fill:#fff}
+.node.cut circle{fill:#FFF3E0;stroke:#C77700;stroke-dasharray:4 3}
+.edge{stroke:#8A97A5;stroke-width:3}
+.edge.dead{stroke:#D7DDE3;stroke-dasharray:5 5}
+
+/* Zeitleiste */
+.tl{list-style:none;margin:0;padding:0;max-width:560px}
+.tl li{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;margin:0 0 6px}
+.tl .t{flex:1;font-weight:600}
+.tl .yr{font-weight:800;color:var(--c1);min-width:62px;text-align:right}
+.tl li.right{border-color:var(--ok);background:var(--ok-bg)}
+.tl li.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.tl .mv{display:flex;gap:4px}
+.tl .mv button{width:32px;height:32px;border:1px solid var(--rule);background:#fff;border-radius:6px;cursor:pointer;display:grid;place-items:center}
+.tl .mv button:hover{border-color:var(--ink-3)}
+.tl .mv button[disabled]{opacity:.3;cursor:default}
+.msg{font-weight:700;margin:12px 0 0;min-height:1.5em}
+.msg.ok{color:var(--ok)}
+.msg.bad{color:var(--bad)}
+.rowb{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+/* Feed */
+.phone{max-width:420px;margin:0 auto;background:#0F161D;border-radius:30px;padding:14px 10px 18px}
+.phone-head{display:flex;justify-content:space-between;color:#C9D3DC;font-size:13px;padding:2px 12px 10px}
+.feed{display:flex;flex-direction:column;gap:8px}
+.post{background:#fff;border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:38px 1fr;gap:4px 10px}
+.ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;grid-row:span 2}
+.post .h{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.post .tag{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;background:#EEF1F4;color:var(--ink-2)}
+.post .tx{font-size:15px;line-height:1.4}
+.post .act{grid-column:2;display:flex;justify-content:flex-end}
+.like{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:#fff;border-radius:999px;padding:5px 12px;cursor:pointer;font-weight:700;font-size:14px}
+.like:hover{border-color:var(--c2);color:var(--c2)}
+.like svg{width:16px;height:16px}
+.round{color:#C9D3DC;font-size:13px;text-align:center;padding:10px 0 0}
+.mix{margin:10px 0 0}
+.mix .lbl{font-size:14px;font-weight:700;margin:12px 0 4px}
+.bar{display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid var(--rule)}
+.bar span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ink-2);margin:10px 0 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* Hotspot-Suche (Shop, Mail) */
+.hunt-wrap{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.hot{cursor:pointer;border-radius:6px;outline:2px dashed transparent;outline-offset:2px;transition:outline-color .1s,background .1s}
+.hot:hover{outline-color:#9AA6B2}
+.hot.found{outline:3px solid var(--bad);outline-offset:2px;background:var(--bad-bg)}
+.hot.nope{outline:2px solid var(--ok);outline-offset:2px}
+.found-list{list-style:none;margin:0;padding:0;counter-reset:f}
+.found-list li{border:1px dashed var(--rule);border-radius:8px;padding:8px 12px;margin:0 0 6px;font-size:14px;color:var(--ink-3);min-height:40px}
+.found-list li.got{border:1px solid var(--bad);background:var(--bad-bg);color:var(--ink)}
+.found-list li b{display:block;color:var(--bad);font-size:14px}
+.count{font-weight:800;font-size:15px;margin:0 0 8px}
+.flash{font-size:14px;color:var(--ok);min-height:1.4em;margin:6px 0 0;font-weight:700}
+
+.shop{background:#fff;border:1px solid var(--rule);border-radius:12px;overflow:hidden;font-size:15px}
+.shop-bar{background:#1E2B38;color:#fff;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.shop-bar small{font-weight:400;opacity:.8}
+.shop-flash{display:block;background:#FFE44D;color:#3A2E00;font-weight:800;text-align:center;padding:7px;font-size:15px;width:100%;border:0}
+.shop-body{padding:14px;display:grid;grid-template-columns:120px 1fr;gap:14px}
+.shop-img{width:120px;height:120px;border-radius:10px;background:#EEF1F4;display:grid;place-items:center;border:0;padding:0}
+.shop h5{margin:0 0 4px;font-size:18px}
+.price{display:inline-block;border:0;background:none;padding:2px 4px;text-align:left}
+.price s{color:var(--ink-3);font-size:14px}
+.price b{font-size:22px;color:#C62828;display:block}
+.scarce,.watch,.ship,.desc{display:block;width:100%;text-align:left;border:0;background:none;padding:3px 4px;margin:2px 0;font-size:14px}
+.scarce{color:#C62828;font-weight:700}
+.watch{color:#6D4C00}
+.addon{display:flex;gap:8px;align-items:center;margin:8px 0 0;padding:6px 8px;font-size:14px;border:1px solid var(--rule);width:100%;background:#FAFBFC;text-align:left}
+.addon .box{width:18px;height:18px;border-radius:4px;background:#1565C0;display:grid;place-items:center;flex:none}
+.cart{display:block;width:100%;margin:10px 0 0;background:#F2B705;color:#2A2100;border:0;padding:10px;border-radius:999px;font-weight:800}
+.nl{margin:0 14px 14px;padding:12px;border-radius:10px;background:#F4F1FF;font-size:14px}
+.nl .nl-in{display:flex;gap:6px;margin:6px 0}
+.nl .nl-in span{flex:1;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:5px 8px;color:var(--ink-3)}
+.nl .nl-in b{background:var(--c5);color:#fff;border-radius:6px;padding:5px 10px}
+.shame{border:0;background:none;padding:2px 4px;font-size:12px;color:var(--ink-3);text-decoration:underline}
+
+/* Schätzen */
+.est{display:grid;gap:16px;max-width:600px}
+.est label{font-weight:700;display:flex;justify-content:space-between;gap:12px}
+.est label output{font-weight:800;color:var(--c4);min-width:52px;text-align:right}
+.est input[type=range]{width:100%;accent-color:var(--c4)}
+.cmp{display:grid;gap:14px;margin:4px 0 0}
+.cmp .name{font-weight:700;font-size:15px;margin:0 0 4px}
+.cmp .track{position:relative;height:30px;background:#EEF1F4;border-radius:6px}
+.cmp .real{position:absolute;left:0;top:0;bottom:0;background:var(--c4);border-radius:6px 0 0 6px;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;min-width:46px}
+.cmp .guess{position:absolute;top:-5px;bottom:-5px;width:4px;background:var(--ink);border-radius:2px}
+.cmp .guess::after{content:attr(data-l);position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:700;white-space:nowrap;color:var(--ink)}
+.cmp .meta{font-size:13px;color:var(--ink-3);margin:6px 0 0}
+
+/* Fake News */
+.posts{display:grid;gap:18px}
+.fpost{border:1px solid var(--rule);border-radius:12px;background:#fff;overflow:hidden}
+.fp-top{display:flex;gap:10px;align-items:center;padding:12px 14px 6px}
+.fp-top .ava{grid-row:auto}
+.fp-who{font-weight:700;font-size:15px;line-height:1.2}
+.fp-who small{display:block;font-weight:400;color:var(--ink-3);font-size:13px}
+.fp-tx{padding:2px 14px 10px;font-size:16px;font-weight:600}
+.fp-img{display:block;width:100%;height:auto;background:#DCE3EA}
+.tools{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px 0}
+.finds{list-style:none;margin:8px 14px 0;padding:0}
+.finds li{font-size:14px;padding:6px 10px;border-left:4px solid var(--c5);background:#F5F2FC;margin:0 0 4px;border-radius:0 6px 6px 0}
+.finds li b{color:var(--c5)}
+.verdict{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 14px 14px;border-top:1px solid #EEF1F4;margin-top:10px}
+.verdict span{font-size:14px;color:var(--ink-2);margin-right:4px}
+.vres{padding:0 14px 14px;font-size:15px}
+.vres.ok{color:var(--ok)}
+.vres.bad{color:var(--bad)}
+.vres b{display:block}
+
+/* Mail */
+.mail{background:#fff;border:1px solid var(--rule);border-radius:12px;font-size:15px;overflow:hidden}
+.mail-h{padding:12px 16px;border-bottom:1px solid #EEF1F4;display:grid;gap:4px}
+.mail-h .k{color:var(--ink-3);display:inline-block;min-width:58px}
+.mail-h button,.mail-b button{border:0;background:none;padding:2px 4px;text-align:left;font-size:15px}
+.mail-b{padding:16px}
+.mail-b p{margin:0 0 10px}
+.mlogo{display:flex;align-items:center;gap:8px;font-weight:800;color:#E4405F;margin:0 0 12px}
+.mbtn{display:inline-block!important;background:#E4405F!important;color:#fff;border-radius:8px;padding:9px 16px!important;font-weight:800;text-decoration:none}
+.linkpeek{font-size:13px;color:var(--ink-3);margin:-4px 0 10px;min-height:1.3em;font-family:ui-monospace,Menlo,Consolas,monospace}
+
+/* Mobbing */
+.scene{background:#EAF2E9;border-radius:12px;padding:14px;max-width:440px}
+.bub{background:#fff;border-radius:12px;padding:8px 12px;margin:0 0 6px;font-size:15px;max-width:85%}
+.bub small{display:block;font-weight:700;font-size:12px;color:var(--ink-3)}
+.bub.img{display:flex;gap:10px;align-items:center}
+.bub.img .ph{width:64px;height:48px;border-radius:6px;background:repeating-linear-gradient(45deg,#C9D2DB 0 6px,#DDE3E9 6px 12px);flex:none}
+.opts{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;max-width:620px}
+.opts label{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;cursor:pointer}
+.opts input{margin-top:4px;accent-color:var(--ink)}
+.opts .fb{display:block;font-size:14px;margin-top:3px}
+.opts li.g label{border-color:var(--ok);background:var(--ok-bg)}
+.opts li.b label{border-color:var(--bad);background:var(--bad-bg)}
+
+/* Test */
+.q{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:20px 22px;margin:0 0 14px}
+.q legend{font-weight:700;font-size:17px;padding:0;margin:0 0 10px;line-height:1.4}
+.q legend small{display:block;font-weight:600;font-size:13px;color:var(--ink-3);margin-bottom:2px}
+.q fieldset{border:0;margin:0;padding:0;min-width:0}
+.q label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.q label:hover{background:#F4F6F8}
+.q input{margin-top:4px;accent-color:var(--ink)}
+.q label.is-right{border-color:var(--ok);background:var(--ok-bg)}
+.q label.is-wrong{border-color:var(--bad);background:var(--bad-bg)}
+.qbar{position:sticky;bottom:0;background:var(--paper);padding:14px 0;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--rule)}
+.confirm{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:18px 20px;margin:12px 0 0;max-width:560px}
+.confirm p{margin:0 0 12px}
+.lock{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:24px 26px;margin-top:24px}
+
+/* Ergebnis */
+.card{background:var(--surface);border:2px solid var(--ink);border-radius:16px;padding:26px 28px;margin:28px 0 0;max-width:640px}
+.card-top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.card .nm{font-size:22px;font-weight:800;line-height:1.2}
+.card .meta{color:var(--ink-2);font-size:15px}
+.score{text-align:right}
+.score b{font-size:56px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.score span{display:block;color:var(--ink-2);font-size:15px}
+.code{margin:18px 0 0;padding:12px 14px;border-radius:10px;background:#F4F6F8;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.code b{font-size:24px;letter-spacing:.08em;font-weight:800}
+.per{margin:20px 0 0;display:grid;gap:8px}
+.per .r{display:grid;grid-template-columns:200px 1fr 46px;gap:10px;align-items:center;font-size:14px}
+.per .r .tr{height:12px;background:#EEF1F4;border-radius:6px;overflow:hidden}
+.per .r .tr span{display:block;height:100%}
+.per .r b{text-align:right}
+.mynotes{margin:28px 0 0;max-width:640px}
+.mynotes dl{margin:0}
+.mynotes dt{font-weight:800;margin:14px 0 2px}
+.mynotes dd{margin:0;color:var(--ink-2);font-size:15px}
+
+/* Lehrkraft */
+.teacher-link{display:block;margin:40px 0 0;font-size:13px;color:var(--ink-3);background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+dialog{border:0;border-radius:14px;padding:0;max-width:440px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(16,24,32,.35)}
+dialog::backdrop{background:rgba(16,24,32,.5)}
+.dlg{padding:22px 24px}
+.dlg h3{margin-bottom:10px}
+.dlg label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
+.dlg input{width:100%;border:1px solid var(--rule);border-radius:8px;padding:8px 10px}
+.dlg hr{border:0;border-top:1px solid var(--rule);margin:20px 0 6px}
+.dlg .res{font-weight:800;margin:10px 0 0;min-height:1.4em}
+
+@media (max-width: 960px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0}
+  .map{min-width:0}
+  .map{position:static;padding:20px 0 0}
+  .map ol{display:flex;gap:4px;overflow-x:auto;padding:4px 2px 10px}
+  .map ol::before{left:14px;right:14px;top:20px;bottom:auto;height:6px;width:auto}
+  .map li{margin:0}
+  .stop{flex-direction:column;align-items:center;gap:4px;padding:2px 4px;width:auto;min-width:64px}
+  .stop-txt{padding:0;align-items:center}
+  .stop-name{display:none}
+  .map-note{display:none}
+  main{padding-top:20px}
+  .nets,.hunt-wrap{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr;row-gap:20px}
+}
+@media (max-width: 560px){
+  .top-in{padding:10px 16px;gap:12px}
+  .who{font-size:13px;gap:10px}
+  .shell{padding:0 16px}
+  .task,.notes{padding:18px 16px}
+  .form .row{grid-template-columns:1fr}
+  .shop-body{grid-template-columns:1fr}
+  .per .r{grid-template-columns:1fr 46px}
+  .per .r .tr{grid-column:1/-1;grid-row:2}
+}
+@media print{
+  .top,.map,.foot,.notes textarea,.teacher-link,.qbar,#reviewWrap,.no-print{display:none!important}
+  body{background:#fff}
+  .shell{display:block}
+  .card{border-width:1px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path d="M3 11h24" stroke="#16202A" stroke-width="4" stroke-linecap="round"/><circle cx="4" cy="11" r="3.5" fill="#fff" stroke="#16202A" stroke-width="2.5"/><circle cx="15" cy="11" r="3.5" fill="#fff" stroke="#16202A" stroke-width="2.5"/><circle cx="26" cy="11" r="3.5" fill="#fff" stroke="#16202A" stroke-width="2.5"/></svg>
+      Netz und Gesellschaft
+    </div>
+    <div class="who" id="who" hidden>
+      <span><strong id="whoName"></strong> <span id="whoClass"></span></span>
+      <span>Bearbeitungszeit <strong id="clock">0 min</strong></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="map" aria-label="Stationen">
+    <ol>
+      <li><button class="stop term" data-go="start"><span class="dot"><span>S</span></span><span class="stop-txt"><span class="stop-sub">Abfahrt</span><span class="stop-name">Start</span></span></button></li>
+      <li><button class="stop" data-go="1" style="--c:var(--c1)"><span class="dot"><span>1</span></span><span class="stop-txt"><span class="stop-sub">Station 1</span><span class="stop-name">Das Internet verändert die Gesellschaft</span></span></button></li>
+      <li><button class="stop" data-go="2" style="--c:var(--c2)"><span class="dot"><span>2</span></span><span class="stop-txt"><span class="stop-sub">Station 2</span><span class="stop-name">Soziale Netzwerke</span></span></button></li>
+      <li><button class="stop" data-go="3" style="--c:var(--c3)"><span class="dot"><span>3</span></span><span class="stop-txt"><span class="stop-sub">Station 3</span><span class="stop-name">E-Commerce</span></span></button></li>
+      <li><button class="stop" data-go="4" style="--c:var(--c4)"><span class="dot"><span>4</span></span><span class="stop-txt"><span class="stop-sub">Station 4</span><span class="stop-name">Wissen und Bildung</span></span></button></li>
+      <li><button class="stop" data-go="5" style="--c:var(--c5)"><span class="dot"><span>5</span></span><span class="stop-txt"><span class="stop-sub">Station 5</span><span class="stop-name">Fake News</span></span></button></li>
+      <li><button class="stop" data-go="6" style="--c:var(--c6)"><span class="dot"><span>6</span></span><span class="stop-txt"><span class="stop-sub">Station 6</span><span class="stop-name">Schattenseiten des Internets</span></span></button></li>
+      <li><button class="stop term" data-go="test"><span class="dot"><span>T</span></span><span class="stop-txt"><span class="stop-sub">Endstation</span><span class="stop-name">Test</span></span></button></li>
+    </ol>
+    <p class="map-note">Richtwert: etwa 5 Minuten pro Station, 10 Minuten für den Test.</p>
+  </nav>
+
+  <main>
+
+<!-- ============ START ============ -->
+<section class="view hero" id="v-start">
+  <h1>Netz und Gesellschaft</h1>
+  <p class="lede">Ihr habt gelernt, wie Netzwerke technisch aufgebaut sind. Jetzt geht es um die Frage, was dieses Netz mit uns Menschen macht. Du fährst dafür sechs Stationen ab, jede zu einem Themenfeld aus dem Buch auf Seite 66 und 67.</p>
+  <ol class="steps" aria-label="Ablauf an jeder Station">
+    <li><strong>Lesen</strong>einen kurzen Text zum Thema</li>
+    <li><strong>Ausprobieren</strong>ein kleines Experiment</li>
+    <li><strong>Notieren</strong>eine Chance und ein Risiko</li>
+    <li><strong>Test</strong>18 Fragen am Ende</li>
+  </ol>
+  <div class="form" id="startForm">
+    <div class="row">
+      <div><label for="inName">Vor- und Nachname</label><input id="inName" autocomplete="name"></div>
+      <div><label for="inClass">Klasse</label><input id="inClass" placeholder="z. B. 9b"></div>
+    </div>
+    <p class="err" id="startErr" hidden>Trag bitte deinen vollständigen Namen und deine Klasse ein. Beides erscheint später auf deiner Ergebniskarte.</p>
+    <div class="foot" style="margin-top:18px"><button class="btn" id="startBtn">Zur ersten Station</button></div>
+  </div>
+  <div class="form" id="resumeBox" hidden>
+    <p style="margin:0 0 14px">Du bist angemeldet als <strong id="resumeName"></strong>. Deine bisherigen Ergebnisse sind gespeichert.</p>
+    <button class="btn" id="resumeBtn">Weiterarbeiten</button>
+  </div>
+  <p class="quiet"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="none" stroke="#465363" stroke-width="2"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="#465363" stroke-width="2.2" stroke-linecap="round"/></svg><span>Im Raum wird gleichzeitig eine Arbeit nachgeschrieben. Arbeite deshalb leise und allein. Die Seite hat keinen Ton.</span></p>
+</section>
+
+<!-- ============ STATION 1 ============ -->
+<section class="view" id="v-1" style="--c:var(--c1)" hidden>
+  <div class="sign"><span class="sign-num">1</span><h2><small>Station 1</small>Das Internet verändert die Gesellschaft</h2></div>
+  <p class="guide">Wie wurde aus einem Netz für ein paar Forschungsrechner ein Netz, ohne das im Alltag kaum noch etwas geht?</p>
+  <div class="read">
+    <p>Nachrichten elektrisch zu übertragen, ist keine Erfindung unserer Zeit. In den 1830er-Jahren schickten die ersten Telegrafen Zeichen über Drähte, später kamen Telefon und Radio hinzu. Die Geschichte des Internets beginnt 1969 mit dem ARPANET, einem Forschungsnetz in den USA. Es verband zunächst vier Rechner an Universitäten und Forschungsinstituten, damit Forschende teure Großrechner gemeinsam nutzen konnten.</p>
+    <p>Die Idee eines verteilten Netzes hatte der Ingenieur Paul Baran schon 1964 beschrieben. Er suchte ein Netz, das weiterarbeitet, auch wenn Teile zerstört werden. Daten sollten nicht über eine einzige Zentrale laufen, sondern über ein verteiltes Netz, in dem jeder Knoten mit mehreren anderen verbunden ist. Fällt eine Leitung aus, suchen sich die Datenpakete einen anderen Weg. Diese Maschenstruktur kennst du aus dem Unterricht über Netzwerktopologien.</p>
+    <p>Im August 1991 machte Tim Berners-Lee am Forschungszentrum CERN in Genf das World Wide Web öffentlich. Erst Webseiten, Links und Browser machten das Internet für alle bedienbar. Heute erledigen wir dort Einkäufe, Bankgeschäfte, Behördengänge und Arzttermine. Das hat Folgen für alle, die das Internet nicht nutzen können oder wollen. Laut Statistischem Bundesamt waren 2025 gut 3 Prozent der 16- bis 74-Jährigen in Deutschland noch nie online, bei den 65- bis 74-Jährigen waren es 10 Prozent. Gleichzeitig gibt es zum Beispiel die BahnCard 25 und 50 seit 2024 nur noch digital, und allein 2025 schlossen rund 1.100 Bankfilialen.</p>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Wie robust ist ein Netz?</h3>
+    <p>Klicke in beiden Netzen auf Rechner, um sie ausfallen zu lassen. Versuche, mit möglichst wenigen Ausfällen möglichst viele Rechner vom Rest abzuschneiden. Ein zweiter Klick schaltet einen Rechner wieder ein.</p>
+    <div class="nets">
+      <div class="net"><h4>Sternnetz</h4><svg id="netStar" viewBox="0 0 300 230" role="group" aria-label="Sternnetz mit 9 Rechnern"></svg><p class="status" id="netStarStatus"></p><button class="btn-s" data-reset="netStar">Zurücksetzen</button></div>
+      <div class="net"><h4>Maschennetz</h4><svg id="netMesh" viewBox="0 0 300 230" role="group" aria-label="Maschennetz mit 9 Rechnern"></svg><p class="status" id="netMeshStatus"></p><button class="btn-s" data-reset="netMesh">Zurücksetzen</button></div>
+    </div>
+    <div class="after" data-after="1.netz" hidden>
+      <h4>Das steckt dahinter</h4>
+      <p>Im Sternnetz genügt ein einziger Ausfall in der Mitte, und alle anderen Rechner sind voneinander getrennt. Im Maschennetz bleibt nach einem Ausfall alles erreichbar, weil es Umwege gibt. Auch das Internet ist deshalb vermascht aufgebaut. Es gibt keinen zentralen Rechner, mit dem man das ganze Netz abschalten könnte. Erst wenn mehrere Rechner gleichzeitig ausfallen, kann im Maschennetz ein Rechner abgeschnitten werden, zum Beispiel der Rechner unten links, der nur zwei Verbindungen hat.</p>
+      <p>Für die Gesellschaft hat das zwei Seiten. Das Netz als Ganzes ist schwer zu zerstören. Es ist aber auch schwer zu kontrollieren, wenn Straftaten darüber laufen. Zensur verhindert der Aufbau allerdings nicht: Staaten können Anbieter im eigenen Land zwingen, Seiten zu sperren oder das Internet abzuschalten. 2025 zählte die Organisation Access Now weltweit mindestens 313 solcher Abschaltungen in 52 Ländern. Ganz ohne Schwachstellen ist es trotzdem nicht: Große Internetknoten und Seekabel sind Punkte, an denen ein Ausfall sehr viele Menschen trifft.</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Ordne die Zeitleiste</h3>
+    <p>Bring die Ereignisse in die richtige Reihenfolge, die älteste nach oben. Nutze die Pfeile und prüfe dann deine Lösung.</p>
+    <ol class="tl" id="tl"></ol>
+    <div class="rowb"><button class="btn-q" id="tlCheck">Reihenfolge prüfen</button><button class="btn-q" id="tlSolve" hidden>Lösung zeigen</button></div>
+    <p class="msg" id="tlMsg" aria-live="polite"></p>
+    <div class="after" data-after="1.zeit" hidden>
+      <h4>Das steckt dahinter</h4>
+      <p>Vom Telegrafen bis zum World Wide Web vergingen gut 150 Jahre. Vom Web bis zum ersten iPhone dauerte es nur 16 Jahre, bis zu ChatGPT noch einmal 15. Etwa zehn Jahre nach dem ersten iPhone nutzten schon acht von zehn Menschen in Deutschland ein Smartphone. Neue Techniken verbreiten sich heute viel schneller als früher. Gesetze, Schulen und Gewohnheiten brauchen dagegen oft Jahre, um sich anzupassen.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Für die Gruppenarbeit</h3>
+    <p>Notiere in eigenen Worten. Deine Notizen erscheinen am Ende auf deiner Ergebniskarte.</p>
+    <label for="n1c">Eine Chance, die ich hier sehe</label><textarea id="n1c" data-note="1.c"></textarea>
+    <label for="n1r">Ein Risiko, das ich hier sehe</label><textarea id="n1r" data-note="1.r"></textarea>
+  </div>
+  <div class="foot"><button class="btn" data-finish="1">Station abschließen</button><span class="hint" data-hint="1">Erledige zuerst beide Aufgaben.</span></div>
+</section>
+
+<!-- ============ STATION 2 ============ -->
+<section class="view" id="v-2" style="--c:var(--c2)" hidden>
+  <div class="sign"><span class="sign-num">2</span><h2><small>Station 2</small>Soziale Netzwerke</h2></div>
+  <p class="guide">Wer entscheidet eigentlich, was du in deinem Feed siehst?</p>
+  <div class="read">
+    <p>Instagram, TikTok, WhatsApp, YouTube und Snapchat gehören für die meisten Jugendlichen zum Alltag. Laut JIM-Studie 2025 nutzen 96 Prozent der 12- bis 19-Jährigen regelmäßig WhatsApp, 63 Prozent Instagram, 56 Prozent Snapchat und 53 Prozent TikTok. Im Schnitt verbringen sie fast vier Stunden am Tag vor dem Smartphone-Bildschirm. Soziale Netzwerke ermöglichen weltweite Kommunikation, neue Kontakte, Unterhaltung ohne Ende und den Austausch mit Menschen aus anderen Kulturen.</p>
+    <p>Informatisch betrachtet ist ein soziales Netzwerk ein Graph: Jede Person ist ein Knoten, jede Beziehung eine Kante. Eine Freundschaft gilt in beide Richtungen, ein Folgen nur in eine. Die Plattform kennt diesen Graphen genau. Sie weiß außerdem, wie lange du ein Video anschaust, was du likst und was du wegwischst.</p>
+    <p>Für dich sind die Apps kostenlos. Die meisten dieser Unternehmen verdienen ihr Geld vor allem mit Werbung, und je länger du bleibst, desto mehr Werbung siehst du. Deshalb wählt ein Empfehlungsalgorithmus aus, was in deinem Feed erscheint. Vereinfacht gesagt ist er vor allem darauf ausgelegt, dass du möglichst lange bleibst und oft wiederkommst, nicht darauf, dich ausgewogen zu informieren.</p>
+    <p>Kritikerinnen und Kritiker sehen darin Risiken: suchtähnliche Nutzung, Vergleichsdruck, Cybermobbing und eine Sicht auf die Welt, die immer enger wird. Einige Staaten reagieren: In Australien dürfen Jugendliche unter 16 Jahren seit Dezember 2025 keine eigenen Konten mehr bei Plattformen wie Instagram, TikTok oder Snapchat haben. Auch in Europa und in Deutschland wird gerade heftig über Altersgrenzen gestritten.</p>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Dein Feed lernt mit</h3>
+    <p>Du scrollst durch eine erfundene App. In der ersten Runde siehst du acht Beiträge, danach jeweils vier. Like in jeder Runde genau den einen Beitrag, den du am ehesten anklicken würdest. Nach sechs Runden siehst du, was mit deinem Feed passiert ist.</p>
+    <div class="phone">
+      <div class="phone-head"><span>Klassenfeed (Demo)</span><span id="feedRound">Runde 1 von 6</span></div>
+      <div class="feed" id="feed" aria-live="polite"></div>
+    </div>
+    <div class="after" data-after="2.feed" hidden>
+      <h4>Das steckt dahinter</h4>
+      <div class="mix" id="feedMix"></div>
+      <p id="feedText" style="margin-top:14px"></p>
+      <p>Echte Plattformen werten viel mehr aus als Likes: wie lange du hinschaust, was du teilst, wann du die App schließt. In deinem Experiment ging es um Themen. Dasselbe kann mit Meinungen passieren: Zeigt dir ein Algorithmus vor allem Beiträge, die zu deiner Meinung passen, spricht man von einer Filterblase. Von einer Echokammer spricht man, wenn sich Menschen vor allem mit Gleichgesinnten austauschen und sich gegenseitig bestätigen. Wie stark diese Effekte in der Wirklichkeit sind, wird in der Forschung diskutiert. Klar ist aber: Den Feed stellt nicht der Zufall zusammen, sondern ein Programm mit einem wirtschaftlichen Ziel.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Für die Gruppenarbeit</h3>
+    <p>Notiere in eigenen Worten.</p>
+    <label for="n2c">Eine Chance, die ich hier sehe</label><textarea id="n2c" data-note="2.c"></textarea>
+    <label for="n2r">Ein Risiko, das ich hier sehe</label><textarea id="n2r" data-note="2.r"></textarea>
+  </div>
+  <div class="foot"><button class="btn" data-finish="2">Station abschließen</button><span class="hint" data-hint="2">Spiele zuerst alle sechs Runden.</span></div>
+</section>
+
+<!-- ============ STATION 3 ============ -->
+<section class="view" id="v-3" style="--c:var(--c3)" hidden>
+  <div class="sign"><span class="sign-num">3</span><h2><small>Station 3</small>E-Commerce</h2></div>
+  <p class="guide">Wer hat beim Onlineshopping eigentlich die Kontrolle: du oder der Shop?</p>
+  <div class="read">
+    <p>E-Commerce bedeutet elektronischer Handel. Mit wenigen Klicks lassen sich Kleidung, Technik oder Lebensmittel bestellen, rund um die Uhr und aus der ganzen Welt. Auch Bankgeschäfte, Versicherungen und die Jobsuche laufen längst online. 2025 setzte der Onlinehandel in Deutschland laut Handelsverband HDE rund 92 Milliarden Euro um, das sind 13,5 Prozent des gesamten Einzelhandels. Für Kundinnen und Kunden heißt das: riesige Auswahl, schneller Preisvergleich und Lieferung bis an die Haustür.</p>
+    <p>Der Onlinehandel hat aber Nebenwirkungen. Auch wegen des Onlinehandels schließen in vielen Innenstädten Geschäfte. Nach einer Schätzung der Universität Bamberg wurden 2025 allein in Deutschland rund 540 Millionen Pakete zurückgeschickt. Das verursacht Verkehr und Verpackungsmüll. Plattformen wie Temu und Shein verschicken Milliarden kleiner Pakete direkt aus China nach Europa. 2025 kamen rund 5,9 Milliarden günstige Artikel in die EU, etwa 93 Prozent davon aus China. Bei einem Test der Stiftung Warentest waren zwei Drittel von 162 auf Temu und Shein gekauften Ketten, Ladegeräten und Babyspielzeugen nicht EU-konform, manche enthielten giftige Stoffe. Seit Juli 2026 fällt auch auf billige Sendungen aus Ländern außerhalb der EU Zoll an.</p>
+    <p>Außerdem setzen manche Shops auf Tricks, die dich zu schnellen Käufen drängen. Fachleute nennen sie Dark Patterns: Gestaltungen, die bewusst gegen deine Interessen arbeiten. Der Digital Services Act der EU verbietet Onlineplattformen, ihre Seiten so zu gestalten, dass Nutzerinnen und Nutzer getäuscht oder manipuliert werden. Falsche Countdowns verbietet außerdem schon das deutsche Gesetz gegen unlauteren Wettbewerb.</p>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Finde die Tricks</h3>
+    <p>Dieser Shop ist erfunden. In ihm stecken sechs Dark Patterns. Klicke auf alles, was dir verdächtig vorkommt. Nicht jedes Element ist ein Trick.</p>
+    <div class="hunt-wrap">
+      <div class="shop" id="shop">
+        <div class="shop-bar">Kaufhafen <small>Warenkorb (0)</small></div>
+        <button class="shop-flash hot" data-t="timer">Blitzangebot endet in <span id="cd">01:59</span></button>
+        <div class="shop-body">
+          <button class="shop-img hot" data-ok aria-label="Produktfoto">
+            <svg width="86" height="86" viewBox="0 0 86 86" aria-hidden="true"><path d="M18 50V40a25 25 0 0 1 50 0v10" fill="none" stroke="#37474F" stroke-width="6"/><rect x="10" y="46" width="16" height="26" rx="6" fill="#37474F"/><rect x="60" y="46" width="16" height="26" rx="6" fill="#37474F"/></svg>
+          </button>
+          <div>
+            <h5>Funkkopfhörer Pulse 2</h5>
+            <button class="price hot" data-t="anker"><s>UVP 199,00 €</s><b>79,99 €</b></button>
+            <button class="scarce hot" data-t="knapp">Nur noch 2 Stück auf Lager!</button>
+            <button class="watch hot" data-t="sozial">23 Personen sehen sich diesen Artikel gerade an</button>
+            <button class="ship hot" data-ok>Versand in 2 bis 3 Werktagen</button>
+            <button class="desc hot" data-ok>Bluetooth 5.3, 30 Stunden Akku, faltbar</button>
+            <button class="addon hot" data-t="vorauswahl"><span class="box"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-6" stroke="#fff" stroke-width="2" fill="none"/></svg></span>Geräteschutz Plus für 4,99 € im Monat</button>
+            <button class="cart hot" data-ok>In den Warenkorb</button>
+          </div>
+        </div>
+        <div class="nl">
+          <b>10 % Rabatt auf deine erste Bestellung</b>
+          <div class="nl-in"><span>E-Mail-Adresse</span><b>Sichern</b></div>
+          <button class="shame hot" data-t="shame">Nein danke, ich zahle lieber den vollen Preis.</button>
+        </div>
+      </div>
+      <div>
+        <p class="count" id="shopCount">Gefunden: 0 von 6</p>
+        <ul class="found-list" id="shopList"></ul>
+        <p class="flash" id="shopFlash" aria-live="polite"></p>
+        <button class="btn-q" id="shopSolve" hidden>Auflösung zeigen</button>
+      </div>
+    </div>
+    <div class="after" data-after="3.shop" hidden>
+      <h4>Das steckt dahinter</h4>
+      <p>Alle sechs Tricks zielen auf dasselbe: Du sollst schnell entscheiden und nicht nachdenken. Zeitdruck und Knappheit erzeugen die Angst, etwas zu verpassen. Der durchgestrichene Fantasiepreis lässt den echten Preis billig wirken. Die vorausgewählte Zusatzoption ist ein Abo, das man leicht übersieht.</p>
+      <p>Wenn du so etwas siehst, hilft eine einfache Regel: Seite schließen, später wiederkommen. Meist ist das angeblich knappe Angebot dann immer noch da. Und wenn nicht, hast du selten etwas Wichtiges verpasst.</p>
+      <p>Schon reingetappt? Online-Käufe kannst du meist innerhalb von 14 Tagen widerrufen. Hilfe gibt es bei der Verbraucherzentrale.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Für die Gruppenarbeit</h3>
+    <p>Notiere in eigenen Worten.</p>
+    <label for="n3c">Eine Chance, die ich hier sehe</label><textarea id="n3c" data-note="3.c"></textarea>
+    <label for="n3r">Ein Risiko, das ich hier sehe</label><textarea id="n3r" data-note="3.r"></textarea>
+  </div>
+  <div class="foot"><button class="btn" data-finish="3">Station abschließen</button><span class="hint" data-hint="3">Finde zuerst die Tricks im Shop.</span></div>
+</section>
+
+<!-- ============ STATION 4 ============ -->
+<section class="view" id="v-4" style="--c:var(--c4)" hidden>
+  <div class="sign"><span class="sign-num">4</span><h2><small>Station 4</small>Wissen und Bildung</h2></div>
+  <p class="guide">Steht das Wissen der Welt wirklich allen offen?</p>
+  <div class="read">
+    <p>Früher waren Schulen, Universitäten und Bibliotheken die wichtigsten Orte, um an Wissen zu kommen. Heute passt ein großer Teil des Wissens der Menschheit in die Hosentasche. Die Wikipedia gibt es in mehr als 340 Sprachen, allein die deutschsprachige Ausgabe hat über drei Millionen Artikel. Lernplattformen wie serlo.org oder die Khan Academy erklären kostenlos Mathe und Naturwissenschaften, und Universitäten stellen ganze Vorlesungen ins Netz. Gerade in Ländern mit wenigen Schulen und Bibliotheken kann das für viele Menschen sehr wertvoll sein.</p>
+    <p>Allerdings erreicht dieses Wissen nur, wer einen Internetzugang hat, ihn bezahlen kann und gelernt hat, damit umzugehen. Fachleute sprechen von der digitalen Spaltung. Sie verläuft zwischen reichen und armen Ländern, zwischen Stadt und Land und auch mitten durch Deutschland. In der internationalen Studie ICILS 2023 erreichten 41 Prozent der Achtklässlerinnen und Achtklässler in Deutschland nur sehr grundlegende digitale Kompetenzen. Bei Jugendlichen aus Familien mit höchstens 100 Büchern zu Hause war es fast jede oder jeder Zweite, bei Familien mit mehr als 100 Büchern etwa jede oder jeder Fünfte. Die Zahl der Bücher gilt in solchen Studien als Hinweis auf die soziale Herkunft.</p>
+    <p>Hinzu kommt: Wer sehr viele Informationen hat, muss auch erkennen können, welche davon stimmen. KI-Chatbots liefern in Sekunden eine Antwort. Ob sie richtig ist, muss man aber selbst prüfen.</p>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Schätze, wer online ist</h3>
+    <p>Wie viel Prozent der Menschen nutzen das Internet? Stell die Regler auf deine Schätzung und lös dann auf.</p>
+    <div class="est" id="est"></div>
+    <div class="rowb"><button class="btn-q" id="estBtn">Auflösen</button></div>
+    <p class="msg bad" id="estHint" hidden>Stell zuerst deine Schätzungen mit den Reglern ein.</p>
+    <div class="after" data-after="4.schaetz" hidden>
+      <h4>Das steckt dahinter</h4>
+      <div class="cmp" id="estCmp"></div>
+      <p class="src" style="margin-top:14px">Quelle: Internationale Fernmeldeunion (ITU), Facts and Figures 2025.</p>
+      <p>Weltweit sind rund 2,2 Milliarden Menschen offline, fast alle in Ländern mit niedrigem oder mittlerem Einkommen. Wer offline ist, hat auch keinen Zugang zu kostenlosen Online-Lernangeboten. Das Internet kann Bildung also gerechter machen, es kann bestehende Unterschiede aber auch vergrößern.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Für die Gruppenarbeit</h3>
+    <p>Notiere in eigenen Worten.</p>
+    <label for="n4c">Eine Chance, die ich hier sehe</label><textarea id="n4c" data-note="4.c"></textarea>
+    <label for="n4r">Ein Risiko, das ich hier sehe</label><textarea id="n4r" data-note="4.r"></textarea>
+  </div>
+  <div class="foot"><button class="btn" data-finish="4">Station abschließen</button><span class="hint" data-hint="4">Löse zuerst deine Schätzung auf.</span></div>
+</section>
+
+<!-- ============ STATION 5 ============ -->
+<section class="view" id="v-5" style="--c:var(--c5)" hidden>
+  <div class="sign"><span class="sign-num">5</span><h2><small>Station 5</small>Fake News</h2></div>
+  <p class="guide">Warum fallen so viele Menschen auf Falschmeldungen herein, und wie prüfst du eine Nachricht?</p>
+  <div class="read">
+    <p>Im Deutschen ist der Begriff Fake News noch jung: 2016 wurde er zum Anglizismus des Jahres gewählt, 2017 kam er in den Duden. Gemeint sind Falschmeldungen, die absichtlich verbreitet werden und dabei wie echte Nachrichten aussehen. Die Absichten dahinter sind unterschiedlich: politische Debatten und Wahlen beeinflussen, einzelne Menschen oder ganze Gruppen schlechtmachen, Hass schüren oder einfach mit Klicks Geld verdienen.</p>
+    <p>Falschmeldungen haben es leicht, weil sie überraschen und starke Gefühle wecken. In einer 2018 veröffentlichten Studie untersuchten Forschende am Massachusetts Institute of Technology (MIT) rund 126.000 Nachrichtenketten, die sich von 2006 bis 2017 auf Twitter (heute X) verbreitet hatten. Falschnachrichten wurden mit 70 Prozent höherer Wahrscheinlichkeit weiterverbreitet als wahre, und zwar vor allem von Menschen, nicht von Bots. Auch in Deutschland ist das Thema Alltag: Laut JIM-Studie 2025 sind 67 Prozent der 12- bis 19-Jährigen im Monat vor der Befragung im Internet Fake News begegnet.</p>
+    <p>Wer gegen Fake News vorgehen soll, ist umstritten. Plattformen können Beiträge löschen oder mit Hinweisen versehen. Staaten und die EU können Regeln aufstellen. Die EU verpflichtet zum Beispiel mit dem Digital Services Act große Plattformen, Risiken durch Desinformation zu verringern. Löschen müssen Plattformen aber nur rechtswidrige Inhalte, und viele Falschmeldungen sind nicht verboten. Zu viel Löschen kann außerdem die Meinungsfreiheit einschränken. Unabhängig davon kannst du selbst etwas tun: erst prüfen, dann teilen.</p>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Die Prüfwerkstatt</h3>
+    <p>Drei Beiträge tauchen in deinem Feed auf. Nutze für jeden Beitrag mindestens zwei Prüfwerkzeuge und entscheide dann, ob er glaubwürdig ist. Die Absender und Beiträge sind für diese Übung gestaltet. Ob die Meldungen stimmen, findest du mit den Prüfwerkzeugen heraus.</p>
+    <div class="posts" id="posts"></div>
+    <div class="after" data-after="5.fake" hidden>
+      <h4>Das steckt dahinter</h4>
+      <p>Profis im Faktencheck lesen eine verdächtige Meldung nicht immer wieder durch, sondern verlassen sie und schauen, was andere über die Quelle sagen. Vier Fragen helfen fast immer: Wer steckt dahinter? Wann ist das passiert? Woher stammt das Bild? Berichten seriöse Medien auch darüber?</p>
+      <p>Die Frage nach dem Bild klärt eine Bilder-Rückwärtssuche: Du lädst das Foto in eine Suchmaschine hoch und siehst, wo es schon früher im Netz aufgetaucht ist.</p>
+      <p>Nicht alles Überraschende ist falsch. Die Meldung aus Australien klingt ungewöhnlich, stimmt aber. Genau deshalb reicht ein Bauchgefühl nicht aus.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Für die Gruppenarbeit</h3>
+    <p>Notiere in eigenen Worten.</p>
+    <p style="margin:0;font-size:15px;color:var(--ink-2)">Tipp zur Chance: Wie hilft dir das Internet dabei, Falschmeldungen zu erkennen?</p>
+    <label for="n5c">Eine Chance, die ich hier sehe</label><textarea id="n5c" data-note="5.c"></textarea>
+    <label for="n5r">Ein Risiko, das ich hier sehe</label><textarea id="n5r" data-note="5.r"></textarea>
+  </div>
+  <div class="foot"><button class="btn" data-finish="5">Station abschließen</button><span class="hint" data-hint="5">Beurteile zuerst alle drei Beiträge.</span></div>
+</section>
+
+<!-- ============ STATION 6 ============ -->
+<section class="view" id="v-6" style="--c:var(--c6)" hidden>
+  <div class="sign"><span class="sign-num">6</span><h2><small>Station 6</small>Schattenseiten des Internets</h2></div>
+  <p class="guide">Welche Gefahren gibt es im Netz, und wie kannst du dich und andere schützen?</p>
+  <div class="read">
+    <p>Jede Neuerung bringt auch Schwierigkeiten mit sich. Rund um das Internet sind das zum Beispiel Abhängigkeit und Sucht, Cybermobbing, Kriminalität im Darknet, Angriffe durch Hacker sowie Viren und andere Schadprogramme. Manches passiert aus Versehen, vieles wird aber von Menschen absichtlich verursacht.</p>
+    <p>Eine besonders häufige Masche ist Phishing. Das Wort ist ein Kunstwort aus „Passwort“ und dem englischen fishing, also angeln: Betrügerinnen und Betrüger angeln nach Passwörtern, Kontodaten und persönlichen Informationen. Dazu verschicken sie Nachrichten, die aussehen, als kämen sie von einer Bank, einem Paketdienst oder einer App, die du nutzt. Die Polizei registrierte 2025 rund 334.000 Fälle von Cyberkriminalität, die Deutschland betrafen, zwei Drittel davon aus dem Ausland. Die Dunkelziffer ist deutlich höher.</p>
+    <p>Cybermobbing trifft nicht dein Konto, sondern dich als Mensch: Beleidigungen im Gruppenchat, peinliche Fotos, gefälschte Profile. In der Studie Cyberlife VI von 2026 gaben 20,7 Prozent der befragten Schülerinnen und Schüler zwischen 7 und 20 Jahren an, schon einmal von Cybermobbing betroffen gewesen zu sein, also etwa jede oder jeder Fünfte. 2017 waren es noch 12,7 Prozent. Anders als auf dem Schulhof hört es nach Schulschluss nicht auf, und oft sehen sehr viele Menschen zu. Österreich hat dafür seit 2016 einen eigenen Straftatbestand. In Deutschland gibt es keinen. Hier greifen andere Gesetze, etwa gegen Beleidigung, Bedrohung oder das Verbreiten von Bildaufnahmen. Am 7. Oktober 2026 hat die Bundesregierung einen Gesetzentwurf gegen digitale Gewalt beschlossen. Darüber beraten jetzt Bundestag und Bundesrat. Ein eigener Cybermobbing-Paragraf ist darin nicht vorgesehen.</p>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Untersuche die E-Mail</h3>
+    <p>Diese Nachricht ist im Postfach gelandet. Die App Clipsy ist erfunden. Finde die sechs Hinweise darauf, dass es sich um Phishing handelt. Fahre auch mit der Maus über den Button.</p>
+    <div class="hunt-wrap">
+      <div class="mail" id="mail">
+        <div class="mail-h">
+          <div><span class="k">Von:</span><button class="hot" data-t="absender">Clipsy Support &lt;support@clipsy-sicherheit.co&gt;</button></div>
+          <div><span class="k">An:</span><button class="hot" data-ok>dich</button></div>
+          <div><span class="k">Betreff:</span><button class="hot" data-t="druck"><strong>Ihr Konto wird in 24 Stunden gelöscht!!</strong></button></div>
+        </div>
+        <div class="mail-b">
+          <button class="mlogo hot" data-ok aria-label="Logo"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="20" height="20" rx="6" fill="#E4405F"/><circle cx="11" cy="11" r="4.5" fill="none" stroke="#fff" stroke-width="2"/></svg>Clipsy</button>
+          <p><button class="hot" data-t="anrede">Sehr geehrter Nutzer,</button></p>
+          <p>wir haben ungewöhnliche Aktivitäten in Ihrem Konto festgestellt. <button class="hot" data-t="fehler">Bitte bestätigen sie innerhalb von 24 Stunden ihre Daten, sonst wird ihr Konto unwiederruflich gelöscht.</button></p>
+          <p><button class="mbtn hot" data-t="link" id="mailLink" title="http://clipsy-login.konto-check.ru/verify">Jetzt Konto bestätigen</button></p>
+          <p class="linkpeek" id="linkPeek" aria-live="polite"></p>
+          <p><button class="hot" data-t="passwort">Geben Sie dafür Ihren Benutzernamen, Ihr Passwort und Ihre Handynummer ein.</button></p>
+          <p><button class="hot" data-ok>Mit freundlichen Grüßen<br>Ihr Clipsy-Team</button></p>
+        </div>
+      </div>
+      <div>
+        <p class="count" id="mailCount">Gefunden: 0 von 6</p>
+        <ul class="found-list" id="mailList"></ul>
+        <p class="flash" id="mailFlash" aria-live="polite"></p>
+        <button class="btn-q" id="mailSolve" hidden>Auflösung zeigen</button>
+      </div>
+    </div>
+    <div class="after" data-after="6.phish" hidden>
+      <h4>Das steckt dahinter</h4>
+      <p>Seriöse Unternehmen fragen niemals per E-Mail nach deinem Passwort. Wenn du unsicher bist, öffne die App oder die Webseite selbst, ohne auf den Link zu klicken. Hast du schon Daten eingegeben, ändere sofort dein Passwort und sag einer erwachsenen Person Bescheid.</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <h3>Ausprobieren: Was tust du?</h3>
+    <p>Diese Situation ist erfunden, kommt aber so oder ähnlich in vielen Klassen vor. Wähle alle Reaktionen aus, die du für richtig hältst.</p>
+    <div class="scene" aria-label="Gruppenchat der Klasse">
+      <div class="bub"><small>Jonas</small>Leute schaut mal, was ich aus Mias Foto gemacht hab 😂</div>
+      <div class="bub img"><span class="ph" aria-hidden="true"></span><span><small>Jonas</small>bearbeitetes Foto</span></div>
+      <div class="bub"><small>Lea</small>😂😂😂</div>
+      <div class="bub"><small>Tim</small>schick das mal in die andere Gruppe</div>
+    </div>
+    <ul class="opts" id="mob"></ul>
+    <div class="rowb"><button class="btn-q" id="mobBtn">Auswerten</button></div>
+    <p class="msg" id="mobScore" aria-live="polite"></p>
+    <div class="after" data-after="6.mobbing" hidden>
+      <h4>Das steckt dahinter</h4>
+      <p>Wer nur zuschaut, gibt denen, die mobben, das Gefühl, alle fänden es lustig. Schon eine einzige Person, die widerspricht oder der betroffenen Person schreibt, verändert viel. Beweise sicherst du mit Screenshots, die du nicht weiterleitest, sondern einer Vertrauensperson zeigst.</p>
+      <p><strong>Ausnahme:</strong> Zeigt ein Bild jemanden nackt oder sexualisiert, auch als Fälschung, dann mach keinen Screenshot. Schon das Speichern kann strafbar sein. Melde das Bild und sag sofort einer erwachsenen Vertrauensperson Bescheid.</p>
+      <p>Hilfe gibt es bei der Nummer gegen Kummer unter 116 111 (kostenlos und anonym, Montag bis Samstag 14 bis 20 Uhr) und bei juuuport.de, wo Jugendliche andere Jugendliche online beraten. Rund um die Uhr erreichbar sind krisenchat.de für alle unter 25 und die TelefonSeelsorge unter 0800 111 0 111. In akuter Gefahr wähle 112.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Für die Gruppenarbeit</h3>
+    <p>Notiere in eigenen Worten.</p>
+    <label for="n6c">Eine Chance, die ich hier sehe</label><textarea id="n6c" data-note="6.c"></textarea>
+    <label for="n6r">Ein Risiko, das ich hier sehe</label><textarea id="n6r" data-note="6.r"></textarea>
+  </div>
+  <div class="foot"><button class="btn" data-finish="6">Station abschließen</button><span class="hint" data-hint="6">Erledige zuerst beide Aufgaben.</span></div>
+</section>
+
+<!-- ============ TEST ============ -->
+<section class="view" id="v-test" style="--c:var(--ink)" hidden>
+  <div class="sign"><span class="sign-num">T</span><h2><small>Endstation</small>Test</h2></div>
+  <div id="testLocked" class="lock" hidden>
+    <h3>Der Test ist noch gesperrt</h3>
+    <p id="lockText" style="margin:0"></p>
+  </div>
+  <div id="testOpen" hidden>
+    <p class="guide">18 Fragen, zu jeder Station drei. Es gibt jeweils genau eine richtige Antwort. Du kannst den Test nur einmal abgeben.</p>
+    <form id="quiz" style="margin-top:24px"></form>
+    <div class="qbar">
+      <button class="btn" id="quizSubmit" type="button">Test abgeben</button>
+      <span class="hint" id="quizProgress"></span>
+    </div>
+    <div class="confirm" id="quizConfirm" hidden>
+      <p id="confirmText"></p>
+      <div class="rowb"><button class="btn" id="confirmYes" type="button">Ja, jetzt abgeben</button><button class="btn-q" id="confirmNo" type="button">Weiter bearbeiten</button></div>
+    </div>
+  </div>
+  <div id="testDone" hidden>
+    <div class="card" id="card"></div>
+    <div class="rowb no-print" style="margin-top:16px">
+      <button class="btn-q" id="dlBtn">Ergebnis als Datei speichern</button>
+      <button class="btn-q" id="printBtn">Ergebnis drucken</button>
+    </div>
+    <div class="mynotes" id="myNotes"></div>
+    <div id="reviewWrap" style="margin-top:36px">
+      <h3>Deine Antworten im Überblick</h3>
+      <p style="color:var(--ink-2);margin:0 0 16px">Grün markiert eine richtige Antwort, Rot eine falsche. Die Lösungen besprecht ihr später gemeinsam.</p>
+      <div id="review"></div>
+    </div>
+  </div>
+  <button class="teacher-link" id="teacherOpen">Für Lehrkräfte</button>
+</section>
+
+  </main>
+</div>
+
+<dialog id="teacher">
+  <div class="dlg">
+    <h3>Prüfcode kontrollieren</h3>
+    <label for="tName">Name wie auf der Karte</label><input id="tName">
+    <label for="tClass">Klasse</label><input id="tClass">
+    <label for="tScore">Punkte</label><input id="tScore" inputmode="numeric">
+    <label for="tDate">Datum</label><input id="tDate" type="date">
+    <label for="tCode">Prüfcode</label><input id="tCode" placeholder="ABC-123">
+    <div class="rowb"><button class="btn-q" id="tCheck">Prüfen</button></div>
+    <p class="res" id="tRes" aria-live="polite"></p>
+    <hr>
+    <h3 style="font-size:16px">Bearbeitung zurücksetzen</h3>
+    <p style="font-size:14px;color:var(--ink-2);margin:0">Löscht alle Eingaben auf diesem Rechner. Dafür ist die PIN aus der Lehrerhandreichung nötig.</p>
+    <label for="tPin">PIN</label><input id="tPin" type="password" inputmode="numeric">
+    <div class="rowb"><button class="btn-q" id="tReset">Zurücksetzen</button><button class="btn" id="tClose" style="margin-left:auto">Schließen</button></div>
+    <p class="res" id="tResetRes" aria-live="polite"></p>
+  </div>
+</dialog>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Speicher ---------- */
+const KEY = 'netz-gesellschaft-v1';
+const KEY_TRIES = 'netz-gesellschaft-v1-abgaben';
+const SALT = 'Maschennetz-2026';
+const PIN = '2627';
+const REQ = {1:['netz','zeit'],2:['feed'],3:['shop'],4:['schaetz'],5:['fake'],6:['phish','mobbing']};
+const NAMES = {1:'Das Internet verändert die Gesellschaft',2:'Soziale Netzwerke',3:'E-Commerce',4:'Wissen und Bildung',5:'Fake News',6:'Schattenseiten des Internets'};
+const COLORS = {1:'#1565C0',2:'#B0175A',3:'#A85400',4:'#2E7D32',5:'#6A3FC0',6:'#37474F'};
+
+function fresh(){return {name:'',klasse:'',start:null,flags:{},done:{},notes:{},current:'start',quiz:{answers:{},order:{},submitted:false,result:null}};}
+function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);return Object.assign(fresh(),o);}}catch(e){}return fresh();}
+let S = load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+function esc(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- Navigation ---------- */
+function allDone(){return [1,2,3,4,5,6].every(n=>S.done[n]);}
+function go(id){
+  id = String(id);
+  if(id!=='start' && !S.name){id='start';}
+  $$('.view').forEach(v=>v.hidden=true);
+  $('#v-'+id).hidden=false;
+  S.current=id; save();
+  updateMap();
+  if(id==='test') renderTest();
+  window.scrollTo({top:0,behavior:'instant'});
+  const h=$('#v-'+id+' h2, #v-'+id+' h1'); if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});}
+}
+function updateMap(){
+  $$('.stop').forEach(b=>{
+    const id=b.dataset.go;
+    if(id===S.current) b.setAttribute('aria-current','step'); else b.removeAttribute('aria-current');
+    b.classList.toggle('done', !!S.done[id] || (id==='test' && S.quiz.submitted) || (id==='start' && !!S.name));
+    b.classList.toggle('locked', id==='test' && !allDone());
+  });
+}
+$$('.stop').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+
+/* ---------- Start ---------- */
+function showWho(){
+  if(!S.name){$('#who').hidden=true;return;}
+  $('#who').hidden=false;
+  $('#whoName').textContent=S.name;
+  $('#whoClass').textContent=S.klasse?('Klasse '+S.klasse):'';
+  tick();
+}
+function tick(){
+  if(!S.start) return;
+  const end = S.quiz.result ? S.quiz.result.endTs : Date.now();
+  $('#clock').textContent=Math.max(0,Math.round((end-S.start)/60000))+' min';
+}
+setInterval(tick,20000);
+function startView(){
+  const has=!!S.name;
+  $('#startForm').hidden=has; $('#resumeBox').hidden=!has;
+  if(has) $('#resumeName').textContent=S.name+(S.klasse?' ('+S.klasse+')':'');
+}
+$('#startBtn').addEventListener('click',()=>{
+  const n=$('#inName').value.trim().replace(/\s+/g,' '), k=$('#inClass').value.trim();
+  if(n.split(' ').length<2 || !k){$('#startErr').hidden=false;return;}
+  S.name=n; S.klasse=k; S.start=Date.now(); save();
+  showWho(); startView(); go(1);
+});
+$('#resumeBtn').addEventListener('click',()=>{
+  const next=[1,2,3,4,5,6].find(n=>!S.done[n]);
+  go(S.quiz.submitted||!next?'test':next);
+});
+
+/* ---------- Flags und Abschluss ---------- */
+function setFlag(st,f){S.flags[st+'.'+f]=true;save();applyFlags();}
+function applyFlags(){
+  $$('[data-after]').forEach(el=>{el.hidden=!S.flags[el.dataset.after];});
+  for(const st in REQ){
+    const ok=REQ[st].every(f=>S.flags[st+'.'+f]);
+    const btn=$('[data-finish="'+st+'"]'); const hint=$('[data-hint="'+st+'"]');
+    btn.disabled=!ok; hint.hidden=ok;
+    btn.textContent = S.done[st] ? (st<6?'Weiter zur nächsten Station':'Weiter zum Test') : 'Station abschließen';
+  }
+}
+$$('[data-finish]').forEach(b=>b.addEventListener('click',()=>{
+  if(b.disabled)return;
+  const st=+b.dataset.finish; S.done[st]=true; save(); updateMap(); applyFlags();
+  go(st<6?st+1:'test');
+}));
+$$('[data-note]').forEach(t=>{
+  t.value=S.notes[t.dataset.note]||'';
+  t.addEventListener('input',()=>{S.notes[t.dataset.note]=t.value;save();});
+});
+
+/* ---------- Station 1: Netz-Experiment ---------- */
+const NETS={
+  netStar:{nodes:(()=>{const a=[{x:150,y:115}];for(let i=0;i<8;i++){const w=i*Math.PI/4-Math.PI/2;a.push({x:150+92*Math.cos(w),y:115+88*Math.sin(w)});}return a;})(),
+           edges:[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8]]},
+  netMesh:{nodes:[{x:55,y:30},{x:150,y:24},{x:245,y:30},{x:60,y:115},{x:150,y:115},{x:240,y:115},{x:55,y:200},{x:150,y:206},{x:245,y:200}],
+           edges:[[0,1],[1,2],[3,4],[4,5],[6,7],[7,8],[0,3],[3,6],[1,4],[4,7],[2,5],[5,8],[0,4],[4,8],[2,4]]}
+};
+const netState={netStar:new Set(),netMesh:new Set()};
+function components(net,off){
+  const n=net.nodes.length, adj=Array.from({length:n},()=>[]);
+  net.edges.forEach(([a,b])=>{if(!off.has(a)&&!off.has(b)){adj[a].push(b);adj[b].push(a);}});
+  const seen=new Array(n).fill(-1);let comps=[];
+  for(let i=0;i<n;i++){if(off.has(i)||seen[i]>=0)continue;const c=[];const st=[i];seen[i]=comps.length;while(st.length){const v=st.pop();c.push(v);adj[v].forEach(w=>{if(seen[w]<0){seen[w]=comps.length;st.push(w);}});}comps.push(c);}
+  return {comps,seen};
+}
+function drawNet(id){
+  const net=NETS[id], off=netState[id], svg=$('#'+id);
+  const {comps,seen}=components(net,off);
+  let big=-1,bs=0;comps.forEach((c,i)=>{if(c.length>bs){bs=c.length;big=i;}});
+  const parts=comps.length, split=parts>1, isolated=split&&bs===1;
+  let h='';
+  net.edges.forEach(([a,b])=>{const A=net.nodes[a],B=net.nodes[b];h+=`<line class="edge${off.has(a)||off.has(b)?' dead':''}" x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}"/>`;});
+  net.nodes.forEach((p,i)=>{
+    const cls=off.has(i)?' off':(split&&(isolated||seen[i]!==big)?' cut':'');
+    h+=`<g class="node${cls}" data-i="${i}" tabindex="0" role="button" aria-pressed="${off.has(i)}" aria-label="Rechner ${i+1}${off.has(i)?', ausgefallen':''}"><circle cx="${p.x}" cy="${p.y}" r="15"/><rect x="${p.x-6}" y="${p.y-5}" width="12" height="8" rx="1.5"/><rect x="${p.x-3}" y="${p.y+4}" width="6" height="2"/></g>`;
+  });
+  svg.innerHTML=h;
+  const alive=net.nodes.length-off.size, cut=alive-bs;
+  const st=$('#'+id+'Status');
+  if(!off.size) st.innerHTML='Alle 9 Rechner laufen und können sich gegenseitig erreichen.';
+  else if(!alive) st.innerHTML='Alle Rechner sind ausgefallen.';
+  else st.innerHTML=`<b>${off.size}</b> ausgefallen. `+(!split?`Die übrigen <b>${alive}</b> Rechner erreichen sich weiterhin.`:isolated?`Alle <b>${alive}</b> laufenden Rechner sind voneinander getrennt.`:`Das Netz ist in <b>${parts}</b> Teile zerfallen. <b>${cut}</b> von ${alive} laufenden Rechnern ${cut===1?'ist':'sind'} vom größten Teil abgeschnitten.`);
+  $$('.node',svg).forEach(g=>{
+    const f=()=>{const i=+g.dataset.i;off.has(i)?off.delete(i):off.add(i);drawNet(id);const ng=$(`.node[data-i="${i}"]`,svg);if(ng)ng.focus();checkNets();};
+    g.addEventListener('click',f);
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();f();}});
+  });
+}
+let netTried={netStar:false,netMesh:false};
+function checkNets(){
+  netTried.netStar = netTried.netStar || netState.netStar.size>0;
+  netTried.netMesh = netTried.netMesh || netState.netMesh.size>0;
+  if(netTried.netStar&&netTried.netMesh&&!S.flags['1.netz']) setFlag(1,'netz');
+}
+$$('[data-reset]').forEach(b=>b.addEventListener('click',()=>{netState[b.dataset.reset].clear();drawNet(b.dataset.reset);}));
+drawNet('netStar');drawNet('netMesh');
+
+/* ---------- Station 1: Zeitleiste ---------- */
+const TL=[
+  {t:'Elektrischer Telegraf überträgt Nachrichten über Drähte',y:'1830er'},
+  {t:'Telefon wird zum Patent angemeldet',y:'1876'},
+  {t:'ARPANET verbindet die ersten vier Rechner',y:'1969'},
+  {t:'World Wide Web wird öffentlich',y:'1991'},
+  {t:'Das erste iPhone kommt auf den Markt',y:'2007'},
+  {t:'ChatGPT macht KI-Chatbots für alle zugänglich',y:'2022'}
+];
+let tlOrder=[3,0,5,2,4,1], tlTries=0;
+const UP='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2l5 6H2z" fill="#16202A"/></svg>';
+const DN='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 12L2 6h10z" fill="#16202A"/></svg>';
+function drawTL(mark){
+  $('#tl').innerHTML=tlOrder.map((k,i)=>{
+    const cls=mark?(k===i?'right':'wrong'):'';
+    return `<li class="${cls}"><span class="t">${TL[k].t}</span>${mark==='solved'||(mark&&k===i)?`<span class="yr">${TL[k].y}</span>`:''}<span class="mv"><button data-mv="${i}" data-d="-1" aria-label="nach oben" ${i===0?'disabled':''}>${UP}</button><button data-mv="${i}" data-d="1" aria-label="nach unten" ${i===TL.length-1?'disabled':''}>${DN}</button></span></li>`;
+  }).join('');
+  $$('#tl [data-mv]').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.dataset.mv,d=+b.dataset.d,j=i+d;[tlOrder[i],tlOrder[j]]=[tlOrder[j],tlOrder[i]];drawTL();$('#tlMsg').textContent='';
+    const nb=$(`#tl [data-mv="${j}"][data-d="${d}"]`)||$(`#tl [data-mv="${j}"]`);if(nb)nb.focus();
+  }));
+}
+drawTL();
+$('#tlCheck').addEventListener('click',()=>{
+  tlTries++;
+  const right=tlOrder.filter((k,i)=>k===i).length;
+  if(right===TL.length){drawTL('solved');$('#tlMsg').className='msg ok';$('#tlMsg').textContent='Richtig. Alle sechs stehen an der richtigen Stelle.';setFlag(1,'zeit');}
+  else{drawTL(true);$('#tlMsg').className='msg bad';$('#tlMsg').textContent=`${right} von 6 stehen richtig. Verschiebe die roten Einträge und prüfe erneut.`;$('#tlSolve').hidden=false;}
+});
+$('#tlSolve').addEventListener('click',()=>{tlOrder=[0,1,2,3,4,5];drawTL('solved');$('#tlMsg').className='msg';$('#tlMsg').textContent='Hier ist die richtige Reihenfolge mit den Jahreszahlen.';setFlag(1,'zeit');});
+
+/* ---------- Station 2: Feed ---------- */
+const TOP={
+  fussball:{l:'Fußball',c:'#2E7D32'},gaming:{l:'Gaming',c:'#6A3FC0'},musik:{l:'Musik',c:'#C2185B'},tiere:{l:'Tiere',c:'#A85400'},
+  mode:{l:'Mode',c:'#00838F'},kochen:{l:'Kochen',c:'#D84315'},wissen:{l:'Wissenschaft',c:'#1565C0'},politik:{l:'Politik',c:'#455A64'}
+};
+const POSTS=[
+  ['fussball','kickbase_lena','Was für ein Tor in der 93. Minute! Ich kann immer noch nicht glauben, was da passiert ist.'],
+  ['fussball','tribuene_tom','Das große Stadionwurst-Ranking der Bundesliga. Platz 1 wird euch überraschen.'],
+  ['fussball','jugendcoach_ali','Drei Übungen, mit denen deine Ballannahme sofort besser wird.'],
+  ['fussball','torjaeger_finn','Elfmeter-Challenge gegen meinen kleinen Bruder. Er ist acht. Ich habe verloren.'],
+  ['gaming','pixelpia','Endlich den letzten Boss geschafft. 47 Versuche. Nicht stolz, aber glücklich.'],
+  ['gaming','lagfrei','Diese fünf Indie-Spiele kennt kaum jemand, und das ist ein Fehler.'],
+  ['gaming','controller_kai','Speedrun-Rekord in meiner Liga geknackt. Ich zeige euch den Trick dahinter.'],
+  ['gaming','retro_rina','Ich habe den Gameboy meiner Mutter repariert. Er läuft wieder.'],
+  ['musik','beatbox_mo','Euren Lieblingssong nur mit dem Mund nachgebaut. Hört selbst.'],
+  ['musik','gitarren_gina','Vier Akkorde, hundert Hits: Warum so viele Popsongs gleich klingen.'],
+  ['musik','konzertkind','Erstes Festival in diesem Jahr. Die letzte Zugabe war unbeschreiblich.'],
+  ['musik','chorprobe_cem','Unser Schulchor singt einen Charthit. Ganz ehrlich, besser als das Original.'],
+  ['tiere','hund_bruno','Bruno hat gelernt, die Tür selbst aufzumachen. Wir haben ein Problem.'],
+  ['tiere','wildtierwache','Dieser Igel braucht im Herbst eure Hilfe. So geht es richtig.'],
+  ['tiere','katzenkontor','Warum Katzen Dinge vom Tisch werfen: Die Forschung hat eine Antwort.'],
+  ['tiere','pferdehof_paula','Fohlen Luna macht heute ihre ersten Schritte auf der Weide.'],
+  ['mode','thriftqueen','Komplettes Outfit aus dem Secondhandladen für 18 Euro.'],
+  ['mode','sneakerlab','So erkennst du gefälschte Sneaker in zehn Sekunden.'],
+  ['mode','stylecheck_ela','Drei Teile, zehn Outfits: mein Kapselschrank für den Herbst.'],
+  ['mode','naehmaschine_nils','Aus einer alten Jeans wird eine Tasche. Anleitung im nächsten Post.'],
+  ['kochen','nudelnachmittag','Pasta mit drei Zutaten in zehn Minuten.'],
+  ['kochen','backstube_ben','Mein Sauerteig ist jetzt drei Jahre alt. Er hat einen Namen.'],
+  ['kochen','mealprep_meli','Fünf Pausenbrote, die nicht langweilig sind.'],
+  ['kochen','grillmeister_gabi','Gemüse vom Grill, das sogar meine Familie isst.'],
+  ['wissen','astro_amira','Heute Nacht siehst du den Saturn mit bloßem Auge. Hier musst du hinschauen.'],
+  ['wissen','experimentierkasten','Was passiert mit Seifenblasen bei minus 15 Grad?'],
+  ['wissen','hirnforscher_hannes','Warum dein Gehirn nachts aufräumt und was das mit Schlaf zu tun hat.'],
+  ['wissen','vulkan_vera','Ich war am Ätna. So sieht es 200 Meter vom Krater entfernt aus.'],
+  ['politik','jugendpresse_jetzt','Wählen ab 16: Was spricht dafür, was dagegen? Ein Überblick.'],
+  ['politik','klimadebatte','Wie viel CO₂ verursacht eigentlich ein Paket? Wir haben nachgerechnet.'],
+  ['politik','rathausreport','Unsere Stadt plant einen Skatepark. Hier kannst du mitreden.'],
+  ['politik','europa_erklaert','Was macht das EU-Parlament eigentlich? In 60 Sekunden erklärt.'],
+  ['fussball','schiri_sophie','Ich pfeife seit zwei Jahren Jugendspiele. Diese Sprüche höre ich jedes Wochenende.'],
+  ['fussball','fanblock_frida','Unsere Choreo vom Samstag. 400 Leute, drei Wochen Vorbereitung.'],
+  ['gaming','modding_mats','Ich habe meine Schule in einem Spiel nachgebaut. Sogar der kaputte Kaffeeautomat ist drin.'],
+  ['gaming','teamplay_tara','Fünf Sätze, die jedes Online-Team sofort besser machen.'],
+  ['musik','synth_sam','Aus Geräuschen in der Küche einen Beat gebaut. Topfdeckel inklusive.'],
+  ['musik','playlist_pia','Meine Lernplaylist ohne Gesang. Konzentration garantiert.'],
+  ['tiere','aquarium_aaron','Mein Kampffisch erkennt mich. Kein Witz, schaut euch das an.'],
+  ['tiere','vogelzaehlung','Diese fünf Vögel siehst du gerade in jedem Garten.'],
+  ['mode','upcycling_ulla','Aus drei alten T-Shirts wird ein Hoodie.'],
+  ['mode','vintage_viktor','So sah Schulmode vor 30 Jahren aus. Ich habe die Fotos meiner Eltern gefunden.'],
+  ['kochen','streetfood_suna','Döner selbst gemacht. Ehrliche Bewertung meiner Familie am Ende.'],
+  ['kochen','vegan_vincent','Schokokuchen ohne Ei und Milch. Niemand hat es gemerkt.'],
+  ['wissen','physik_paula','Warum der Himmel blau ist, erklärt mit einer Taschenlampe und einem Glas Milch.'],
+  ['wissen','code_carla','Ich habe meinem Roboter das Ausweichen beigebracht. Zwölf Zeilen Code.'],
+  ['politik','schuelervertretung','Unsere SV hat Wasserspender durchgesetzt. So sind wir vorgegangen.'],
+  ['politik','faktenlage','Wie entsteht eigentlich ein Gesetz? Der Weg in fünf Schritten.']
+].map(([tp,u,tx],i)=>({i,tp,u,tx}));
+const HEART='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.4-5.5-7.2C2.5 4.6 4 3 5.8 3 7 3 7.7 3.7 8 4.3 8.3 3.7 9 3 10.2 3 12 3 13.5 4.6 13.5 6.8 13.5 10.6 8 14 8 14z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+let fw={},fr=1,fseen=new Set(),fhist=[],lastLike=0;
+Object.keys(TOP).forEach(k=>fw[k]=1);
+function pickFeed(){
+  if(fr===1){return shuffle(Object.keys(TOP).map(k=>{const c=POSTS.filter(p=>p.tp===k);return c[Math.floor(Math.random()*c.length)];}));}
+  const out=[];
+  for(let n=0;n<4;n++){
+    // ein Platz pro Runde wird zufällig gefüllt, wie ein Entdecken-Vorschlag
+    const w=n===3?Object.fromEntries(Object.keys(fw).map(k=>[k,1])):fw;
+    const tot=Object.values(w).reduce((a,b)=>a+b,0);let r=Math.random()*tot,tp='politik';
+    for(const k in w){r-=w[k];if(r<=0){tp=k;break;}}
+    const cand=POSTS.filter(p=>p.tp===tp&&!out.includes(p));
+    if(!cand.length){n--;continue;}
+    const fresh=cand.filter(p=>!fseen.has(p.i));
+    const pool=fresh.length?fresh:cand;
+    out.push(pool[Math.floor(Math.random()*pool.length)]);
+  }
+  return out;
+}
+function drawFeed(){
+  if(fr>6){feedDone();return;}
+  const items=pickFeed();items.forEach(p=>fseen.add(p.i));fhist.push(items.map(p=>p.tp));
+  $('#feedRound').textContent=`Runde ${fr} von 6`;
+  $('#feed').innerHTML=items.map(p=>`<article class="post"><span class="ava" style="background:${TOP[p.tp].c}">${p.u[0].toUpperCase()}</span><div class="h">@${p.u}<span class="tag">${TOP[p.tp].l}</span></div><div class="tx">${p.tx}</div><div class="act"><button class="like" data-tp="${p.tp}">${HEART}Gefällt mir</button></div></article>`).join('')+`<p class="round">Like einen Beitrag, um weiterzuscrollen.</p>`;
+  $$('#feed .like').forEach(b=>b.addEventListener('click',()=>{if(Date.now()-lastLike<250)return;lastLike=Date.now();fw[b.dataset.tp]*=6;fr++;drawFeed();const f=$('#feed .like');if(f&&fr<=6)f.focus();}));
+}
+function mixBar(list){
+  const c={};list.forEach(t=>c[t]=(c[t]||0)+1);
+  return `<div class="bar">${Object.keys(TOP).filter(k=>c[k]).map(k=>`<span style="width:${c[k]/list.length*100}%;background:${TOP[k].c}" title="${TOP[k].l}: ${c[k]}"></span>`).join('')}</div>`;
+}
+function feedDone(){
+  $('#feedRound').textContent='Fertig';
+  $('#feed').innerHTML='<p class="round" style="font-size:15px;padding:20px">Du hast sechs Runden gescrollt. Schau dir unten an, was passiert ist.</p>';
+  const first=fhist[0], last=fhist[4].concat(fhist[5]);
+  const cnt={};last.forEach(t=>cnt[t]=(cnt[t]||0)+1);
+  const topK=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0], share=cnt[topK];
+  const used=Object.keys(TOP).filter(k=>first.includes(k)||last.includes(k));
+  $('#feedMix').innerHTML=`<div class="lbl">Runde 1: ${new Set(first).size} verschiedene Themen</div>${mixBar(first)}<div class="lbl">Runde 5 und 6: ${new Set(last).size} verschiedene Themen</div>${mixBar(last)}<div class="legend">${used.map(k=>`<span><i style="background:${TOP[k].c}"></i>${TOP[k].l}</span>`).join('')}</div>`;
+  $('#feedText').textContent = (share>=5 && fw[topK]>=36)
+    ? `In den letzten beiden Runden kamen ${share} von 8 Beiträgen aus dem Thema ${TOP[topK].l}. Du hast nur ein paar Mal geklickt, und schon zeigt dir die App vor allem mehr vom Gleichen. Alles andere verschwindet langsam aus deinem Feed.`
+    : `Dein Feed ist noch recht gemischt. Probier im Kopf aus, was passiert, wenn jemand immer nur ein Thema liked: Nach wenigen Runden würde fast nur noch dieses Thema erscheinen.`;
+  setFlag(2,'feed');
+}
+drawFeed();
+
+/* ---------- Hotspot-Suche (Shop und Mail) ---------- */
+function hunt(rootSel,tricks,st,flag,listSel,countSel,flashSel,solveSel){
+  const root=$(rootSel), list=$(listSel), found=new Set();
+  const keys=Object.keys(tricks);
+  function draw(){
+    list.innerHTML=keys.map(k=>found.has(k)?`<li class="got"><b>${tricks[k][0]}</b>${tricks[k][1]}</li>`:'<li>noch nicht gefunden</li>').join('');
+    $(countSel).textContent=`Gefunden: ${found.size} von ${keys.length}`;
+    $(solveSel).hidden = found.size<3 || found.size===keys.length;
+    if(found.size===keys.length) setFlag(st,flag);
+  }
+  $$('.hot',root).forEach(el=>el.addEventListener('click',e=>{
+    e.preventDefault();
+    if(el.dataset.t){found.add(el.dataset.t);el.classList.add('found');$(flashSel).textContent='';}
+    else{el.classList.add('nope');$(flashSel).textContent='Daran ist nichts Verdächtiges.';setTimeout(()=>el.classList.remove('nope'),900);}
+    draw();
+  }));
+  $(solveSel).addEventListener('click',()=>{keys.forEach(k=>{found.add(k);const el=$(`[data-t="${k}"]`,root);if(el)el.classList.add('found');});draw();setFlag(st,flag);});
+  draw();
+}
+hunt('#shop',{
+  timer:['Künstlicher Zeitdruck','Der Countdown startet einfach neu, wenn er abgelaufen ist. Du sollst sofort kaufen.'],
+  anker:['Fantasie-Vergleichspreis','Die durchgestrichene „UVP“ ist hier ein Mondpreis, den kaum ein Shop wirklich verlangt. Daneben wirkt der echte Preis wie ein Schnäppchen. Prüfe den Preis lieber mit einem Preisvergleich.'],
+  knapp:['Künstliche Knappheit','„Nur noch 2 Stück“ erzeugt Angst, leer auszugehen. Ob es stimmt, kannst du nicht prüfen.'],
+  sozial:['Druck durch andere','Solche Besucherzahlen können frei erfunden sein. Sie sollen dir vortäuschen, dass andere dir den Artikel wegschnappen.'],
+  vorauswahl:['Versteckte Vorauswahl','Das Häkchen ist schon gesetzt. Wer nicht aufpasst, schließt ein Abo ab. In Deutschland wird ein vorab angekreuztes kostenpflichtiges Extra laut Gesetz gar nicht Teil des Vertrags.'],
+  shame:['Schlechtes Gewissen machen','Die Ablehnung ist so formuliert, dass du dich dumm fühlst, wenn du Nein sagst.']
+},3,'shop','#shopList','#shopCount','#shopFlash','#shopSolve');
+(function(){let s=119;setInterval(()=>{s=s<=0?119:s-1;const el=$('#cd');if(el)el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},1000);})();
+
+hunt('#mail',{
+  absender:['Falsche Absenderadresse','Die Adresse wirkt offiziell, gehört aber zu „clipsy-sicherheit.co“. Echte Dienste schreiben von ihrer eigenen Adresse, die du in der App oder auf der offiziellen Webseite findest. Zusätze wie „-sicherheit“ oder „.co“ statt „.com“ sind typische Tricks.'],
+  druck:['Zeitdruck und Drohung','Mit „24 Stunden“ und zwei Ausrufezeichen sollst du in Panik geraten.'],
+  anrede:['Unpersönliche Anrede','Ein echter Dienst kennt deinen Namen. „Sehr geehrter Nutzer“ geht an Tausende. Aber Vorsicht: Manche Betrüger kennen auch deinen Namen.'],
+  fehler:['Fehler im Text','„sie“ und „ihr“ sind klein geschrieben, „unwiederruflich“ ist falsch. Aber Vorsicht: Viele Phishing-Mails sind heute fehlerfrei. Fehler sind ein Hinweis, kein sicheres Zeichen.'],
+  link:['Gefälschter Link','Entscheidend ist der Teil direkt vor dem ersten einzelnen „/“: konto-check.ru. Das vorangestellte „clipsy-login“ ist nur Tarnung. Der Link führt also nicht zu Clipsy.'],
+  passwort:['Abfrage des Passworts','Seriöse Dienste fragen niemals per E-Mail nach deinem Passwort.']
+},6,'phish','#mailList','#mailCount','#mailFlash','#mailSolve');
+(function(){const l=$('#mailLink'),p=$('#linkPeek');const show=()=>p.textContent='Linkziel: '+l.title;const hide=()=>p.textContent='';l.addEventListener('mouseenter',show);l.addEventListener('focus',show);l.addEventListener('mouseleave',hide);l.addEventListener('blur',hide);})();
+
+/* ---------- Station 4: Schätzen ---------- */
+const EST=[{l:'Menschen weltweit',v:74},{l:'Menschen in Ländern mit hohem Einkommen',v:94},{l:'Menschen in Ländern mit niedrigem Einkommen',v:23},{l:'Menschen in Städten, weltweit',v:85},{l:'Menschen auf dem Land, weltweit',v:58}];
+$('#est').innerHTML=EST.map((e,i)=>`<div><label for="es${i}"><span>${e.l}</span><output id="eo${i}">50 %</output></label><input type="range" id="es${i}" min="0" max="100" value="50"></div>`).join('');
+const estMoved=new Set();
+EST.forEach((e,i)=>$('#es'+i).addEventListener('input',ev=>{$('#eo'+i).textContent=ev.target.value+' %';estMoved.add(i);}));
+$('#estBtn').addEventListener('click',()=>{
+  if(!estMoved.size&&!S.flags['4.schaetz']){$('#estHint').hidden=false;return;}
+  $('#estHint').hidden=true;
+  $('#estCmp').innerHTML=EST.map((e,i)=>{const g=+$('#es'+i).value;const d=Math.abs(g-e.v);
+    return `<div><p class="name">${e.l}</p><div class="track"><div class="real" style="width:${e.v}%">${e.v} %</div><div class="guess" style="left:calc(${g}% - 2px)" data-l="deine Schätzung ${g} %"></div></div><p class="meta">${d<=5?'Sehr nah dran.':(g>e.v?`Du hast ${d} Prozentpunkte zu hoch geschätzt.`:`Du hast ${d} Prozentpunkte zu niedrig geschätzt.`)}</p></div>`;}).join('');
+  setFlag(4,'schaetz');
+});
+
+/* ---------- Station 5: Prüfwerkstatt ---------- */
+const FP=[
+  {who:'eilmeldung_alarm_24',sub:'vor 12 Minuten',c:'#B3261E',tx:'EILMELDUNG: Hamburger Innenstadt komplett überflutet!! Die großen Medien verschweigen es. TEILEN, bevor es gelöscht wird!',img:'flood',fake:true,
+   tools:{quelle:'Das Konto gibt es erst seit drei Wochen. Es postet nur Eilmeldungen, ein Impressum fehlt.',datum:'Gepostet heute. Das Datum allein verrät hier nichts.',bild:'Die Bilder-Rückwärtssuche findet das Foto auf Nachrichtenseiten von vor mehreren Jahren, aufgenommen in einem anderen Land.',medien:'Kein seriöses Medium berichtet. Die Stadt Hamburg meldet auf ihrer Webseite keine Überflutung.'},
+   res:'Falschmeldung. Ein altes Foto wird in einen neuen, erfundenen Zusammenhang gestellt. Der Satz „Die Medien verschweigen es“ ist ein typisches Warnsignal.'},
+  {who:'gesundheit-fakten-heute.net',sub:'geteilt von 2.400 Personen',c:'#00838F',tx:'Neue Studie beweist: Wer mehr als zwei Stunden am Tag aufs Handy schaut, verliert 30 Prozent seines Gedächtnisses.',img:'doc',fake:true,
+   tools:{quelle:'Die Webseite hat kein Impressum. Der angebliche Studienautor „Dr. med. K. Weber“ ist nirgends zu finden.',datum:'Der Artikel stammt von 2019 und wird gerade wieder massenhaft geteilt.',bild:'Das Foto des lächelnden Arztes ist ein Stockfoto, das auf Hunderten Webseiten vorkommt.',medien:'Keine Fachzeitschrift hat eine solche Studie veröffentlicht. Eine genaue Zahl wie „30 Prozent“ ohne Quelle ist ein Warnsignal.'},
+   res:'Falschmeldung. Es gibt keine solche Studie. Genaue Zahlen und das Wort „beweist“ sollen Wissenschaftlichkeit vortäuschen.'},
+  {who:'Radio Weststadt Nachrichten',sub:'10. Dezember 2025',c:'#1565C0',tx:'Australien: Ab heute müssen Instagram, TikTok, Snapchat und weitere Plattformen verhindern, dass Jugendliche unter 16 Jahren eigene Konten haben.',img:'phone',fake:false,
+   tools:{quelle:'Ein Radiosender mit Redaktion und Impressum. Er ist seit vielen Jahren bekannt.',datum:'Die Meldung stammt vom 10. Dezember 2025. An diesem Tag trat in Australien die Altersgrenze in Kraft, und sie gilt bis heute. Die Meldung ist also nicht neu, aber weiterhin richtig.',bild:'Das Foto stammt von einer Nachrichtenagentur, die Quelle ist angegeben.',medien:'Auch das ZDF, große Zeitungen und internationale Nachrichtenagenturen berichten darüber.'},
+   res:'Glaubwürdig. Die Meldung klingt überraschend, ist aber von vielen unabhängigen Quellen bestätigt.'}
+];
+const TOOLS=[['quelle','Absender prüfen'],['datum','Datum prüfen'],['bild','Bild zurückverfolgen'],['medien','Andere Medien checken']];
+const IMG={
+  flood:'<svg class="fp-img" viewBox="0 0 400 150" aria-label="Foto einer überfluteten Straße"><rect width="400" height="150" fill="#9FB3C3"/><rect x="20" y="30" width="70" height="80" fill="#6C7F8E"/><rect x="110" y="10" width="90" height="100" fill="#5E7180"/><rect x="220" y="40" width="60" height="70" fill="#738696"/><rect x="300" y="20" width="80" height="90" fill="#62788A"/><rect y="95" width="400" height="55" fill="#5B7C93"/><path d="M0 100 Q50 92 100 100 T200 100 T300 100 T400 100" stroke="#C9DAE6" stroke-width="3" fill="none"/></svg>',
+  doc:'<svg class="fp-img" viewBox="0 0 400 150" aria-label="Foto eines Arztes"><rect width="400" height="150" fill="#E3EEF2"/><circle cx="200" cy="58" r="28" fill="#C9A88A"/><path d="M140 150 Q200 80 260 150" fill="#fff" stroke="#C5D3DA" stroke-width="2"/><path d="M185 112 q15 25 30 0" stroke="#5E7180" stroke-width="3" fill="none"/></svg>',
+  phone:'<svg class="fp-img" viewBox="0 0 400 150" aria-label="Foto eines Smartphones"><rect width="400" height="150" fill="#D8DEE4"/><rect x="170" y="15" width="60" height="120" rx="10" fill="#26323C"/><rect x="176" y="25" width="48" height="96" rx="4" fill="#8FB3D9"/><circle cx="200" cy="73" r="16" fill="none" stroke="#fff" stroke-width="4"/><path d="M188 85 l24 -24" stroke="#fff" stroke-width="4"/></svg>'
+};
+const fpState=FP.map(()=>({used:new Set(),verdict:null}));
+function drawPosts(){
+  $('#posts').innerHTML=FP.map((p,i)=>{
+    const st=fpState[i];
+    return `<article class="fpost"><div class="fp-top"><span class="ava" style="background:${p.c}">${p.who[0].toUpperCase()}</span><div class="fp-who">${p.who}<small>${p.sub}</small></div></div><div class="fp-tx">${p.tx}</div>${IMG[p.img]}
+    <div class="tools">${TOOLS.map(([k,l])=>`<button class="btn-s" data-p="${i}" data-tool="${k}" aria-pressed="${st.used.has(k)}">${l}</button>`).join('')}</div>
+    <ul class="finds">${TOOLS.filter(([k])=>st.used.has(k)).map(([k,l])=>`<li><b>${l}:</b> ${p.tools[k]}</li>`).join('')}</ul>
+    <div class="verdict"><span>Dein Urteil:</span><button class="btn-q" data-p="${i}" data-v="real" ${st.used.size<2||st.verdict?'disabled':''}>Glaubwürdig</button><button class="btn-q" data-p="${i}" data-v="fake" ${st.used.size<2||st.verdict?'disabled':''}>Falschmeldung</button>${st.used.size<2&&!st.verdict?'<span style="margin-left:4px">Erst zwei Werkzeuge nutzen.</span>':''}</div>
+    ${st.verdict?`<p class="vres ${(st.verdict==='fake')===p.fake?'ok':'bad'}"><b>${(st.verdict==='fake')===p.fake?'Richtig erkannt.':'Nicht richtig.'}</b>${p.res}</p>`:''}</article>`;
+  }).join('');
+  $$('#posts [data-tool]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.p;fpState[i].used.add(b.dataset.tool);drawPosts();const nb=$(`#posts [data-p="${i}"][data-tool="${b.dataset.tool}"]`);if(nb)nb.focus();}));
+  $$('#posts [data-v]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.p;fpState[i].verdict=b.dataset.v;drawPosts();if(fpState.every(s=>s.verdict))setFlag(5,'fake');}));
+}
+drawPosts();
+
+/* ---------- Station 6: Mobbing ---------- */
+const MOB=[
+  ['Mitlachen, ist doch nur Spaß.',false,'Für Mia ist es kein Spaß. Jedes Lach-Emoji zeigt ihr, dass die Gruppe gegen sie ist.'],
+  ['Nichts tun, das geht mich nichts an.',false,'Schweigen wirkt wie Zustimmung. Wer zuschaut, ist Teil der Situation.'],
+  ['Mia privat schreiben, dass du auf ihrer Seite bist.',true,'Das hilft sehr. Betroffene fühlen sich oft völlig allein.'],
+  ['Screenshots machen und einer Vertrauensperson zeigen, ohne sie weiterzuleiten.',true,'Beweise helfen Lehrkräften, Eltern und notfalls der Polizei. Ausnahme: Bei Nacktbildern keinen Screenshot machen, sondern sofort melden.'],
+  ['Das Bild beim Anbieter melden.',true,'Gut. Plattformen und Messenger müssen gemeldete Inhalte prüfen.'],
+  ['Im Chat schreiben, dass das nicht okay ist.',true,'Mutig und wirksam. Oft trauen sich dann auch andere.'],
+  ['Das Bild weiterleiten, damit die andere Gruppe Bescheid weiß.',false,'Damit verbreitest du das Bild selbst weiter. Das kann sogar strafbar sein.']
+];
+$('#mob').innerHTML=MOB.map((m,i)=>`<li><label><input type="checkbox" id="mb${i}"><span>${m[0]}<span class="fb" id="mf${i}"></span></span></label></li>`).join('');
+$('#mobBtn').addEventListener('click',()=>{
+  if(!MOB.some((m,i)=>$('#mb'+i).checked)){$('#mobScore').className='msg bad';$('#mobScore').textContent='Wähle zuerst mindestens eine Reaktion aus.';return;}
+  let right=0;
+  MOB.forEach((m,i)=>{const on=$('#mb'+i).checked,li=$('#mb'+i).closest('li');const ok=on===m[1];li.className=ok?'g':'b';
+    $('#mf'+i).textContent=(on&&m[1]?'Richtig gewählt. ':!on&&m[1]?'Hättest du auch wählen sollen. ':on?'Besser nicht. ':'Richtig, nicht gewählt. ')+m[2];
+    if(ok)right++;});
+  $('#mobScore').className='msg';$('#mobScore').textContent=`Du hast ${right} von ${MOB.length} Reaktionen richtig eingeschätzt.`;
+  setFlag(6,'mobbing');
+});
+
+/* ---------- Test ---------- */
+const Q=[
+{s:1,q:'Warum wurde das Internet als vermaschtes Netz aufgebaut?',a:['Damit Daten beim Ausfall eines Knotens einen anderen Weg nehmen können','Weil Maschennetze die wenigsten Kabel brauchen','Damit ein zentraler Rechner das ganze Netz steuern kann','Weil es in den 1960er-Jahren nur Funkverbindungen gab']},
+{s:1,q:'Was machte Tim Berners-Lee im August 1991 am CERN öffentlich?',a:['Das World Wide Web','Das ARPANET','Die erste E-Mail','Das erste Smartphone']},
+{s:1,q:'Welche gesellschaftliche Folge der Digitalisierung beschreibt Station 1?',a:['Wer das Internet nicht nutzen kann, wird bei vielen Dingen des Alltags abgehängt','Ohne Internet kann man in Deutschland nicht mehr wählen','Seit es das Internet gibt, werden keine Briefe mehr verschickt','Das Internet hat Telefon und Radio vollständig ersetzt']},
+{s:2,q:'Womit verdienen kostenlose soziale Netzwerke vor allem ihr Geld?',a:['Mit Werbung','Mit monatlichen Mitgliedsbeiträgen','Mit Geld vom Staat','Mit dem Verkauf von Smartphones']},
+{s:2,q:'Du likst immer wieder Beiträge zum selben Thema. Was macht der Empfehlungsalgorithmus?',a:['Er zeigt dir immer mehr davon und immer weniger anderes','Er zeigt dir bewusst Gegenmeinungen, damit du ausgewogen informiert bist','Er sortiert alle Beiträge streng nach Uhrzeit','Er ändert nichts, weil Likes nicht ausgewertet werden']},
+{s:2,q:'Wie lässt sich ein soziales Netzwerk informatisch beschreiben?',a:['Als Graph: Personen sind Knoten, Beziehungen sind Kanten','Als Bus, an dem alle Nutzer hintereinander hängen','Als Liste von Passwörtern','Als Baum, in dem jede Person genau einen Kontakt hat']},
+{s:3,q:'Was ist ein Dark Pattern?',a:['Eine Gestaltung, die dich bewusst zu Entscheidungen gegen dein eigenes Interesse drängt','Ein dunkles Farbschema für Webseiten','Ein Computervirus, der Onlineshops befällt','Eine besonders sichere Bezahlmethode']},
+{s:3,q:'Ein Shop zeigt „Nur noch 2 Stück auf Lager!“. Welcher Trick kann dahinterstecken?',a:['Künstliche Knappheit','Versteckte Vorauswahl','Fantasie-Vergleichspreis','Schlechtes Gewissen machen']},
+{s:3,q:'Welches EU-Gesetz verbietet Onlineplattformen, Nutzerinnen und Nutzer durch die Gestaltung ihrer Seiten zu täuschen oder zu manipulieren?',a:['Der Digital Services Act','Die EU-Roaming-Verordnung','Die EU-Batterieverordnung','Die EU-Trinkwasserrichtlinie']},
+{s:4,q:'Was bedeutet „digitale Spaltung“?',a:['Menschen haben ungleichen Zugang zum Internet und ungleiche Fähigkeiten, es zu nutzen','Ein Netzwerk wird in zwei Teilnetze aufgeteilt','Menschen nutzen unterschiedlich viele Geräte, haben aber alle die gleichen Fähigkeiten','In sozialen Netzwerken streiten zwei Gruppen miteinander']},
+{s:4,q:'Wo ist der Anteil der Menschen, die das Internet nutzen, am niedrigsten?',a:['In Ländern mit niedrigem Einkommen','In Ländern mit hohem Einkommen','In großen Städten','Er ist überall auf der Welt ungefähr gleich']},
+{s:4,q:'Warum macht ein Internetzugang allein Bildung noch nicht gerecht?',a:['Weil man auch lernen muss, Informationen zu finden und zu prüfen','Weil es im Internet zu wenig Wissen für die Schule gibt','Weil die meisten Lernangebote im Internet Geld kosten','Weil es die Wikipedia nur in wenigen Sprachen gibt']},
+{s:5,q:'Ein Beitrag stammt von einer Seite, die du nicht kennst. Was machen Profis im Faktencheck zuerst?',a:['Sie verlassen die Seite und schauen, was andere über die Quelle sagen','Sie lesen den Beitrag mehrmals gründlich durch','Sie achten darauf, ob die Seite ein professionelles Logo hat','Sie schauen, wie oft der Beitrag geteilt wurde']},
+{s:5,q:'Ein dramatisches Foto zu einer „Eilmeldung“ kommt dir bekannt vor. Welche Prüfung hilft hier am meisten?',a:['Eine Bilder-Rückwärtssuche','Die Anzahl der Likes zählen','Die Kommentare unter dem Beitrag lesen','Den Beitrag weiterleiten und Freunde fragen']},
+{s:5,q:'Warum verbreiten sich Falschmeldungen oft schneller als wahre Nachrichten?',a:['Sie überraschen und wecken starke Gefühle','Plattformen bezahlen für jede geteilte Falschmeldung','Sie sind immer kürzer als echte Nachrichten','Wahre Nachrichten werden automatisch gelöscht']},
+{s:6,q:'Welches Merkmal zeigt am deutlichsten, dass eine E-Mail Phishing ist?',a:['Sie fordert dich auf, dein Passwort über einen Link einzugeben','Sie enthält ein farbiges Logo','Sie kommt an einem Wochenende an','Sie ist auf Deutsch geschrieben']},
+{s:6,q:'In deinem Klassenchat wird jemand mit einem bearbeiteten Foto bloßgestellt. Was ist sinnvoll?',a:['Beweise sichern, die betroffene Person unterstützen und eine Vertrauensperson einschalten','Das Foto weiterleiten, damit alle Bescheid wissen','Nichts tun, weil es dich nicht direkt betrifft','Mitlachen, damit die Stimmung nicht kippt']},
+{s:6,q:'Was unterscheidet Cybermobbing von Mobbing auf dem Schulhof?',a:['Es kann rund um die Uhr weitergehen und von sehr vielen Menschen gesehen werden','Es ist in Deutschland durch ein eigenes Cybermobbing-Gesetz verboten','Es ist harmloser, weil man sich dabei nicht sieht','Es betrifft nur Erwachsene']}
+];
+function ensureOrder(){Q.forEach((q,i)=>{if(!S.quiz.order[i])S.quiz.order[i]=shuffle([0,1,2,3]);});save();}
+function renderTest(){
+  const done=S.quiz.submitted;
+  $('#testDone').hidden=!done;
+  if(done){$('#testOpen').hidden=true;$('#testLocked').hidden=true;renderResult();return;}
+  if(!allDone()){
+    $('#testOpen').hidden=true;$('#testLocked').hidden=false;
+    const miss=[1,2,3,4,5,6].filter(n=>!S.done[n]);
+    $('#lockText').textContent='Der Test öffnet sich, wenn du alle sechs Stationen abgeschlossen hast. Es fehlt noch: '+miss.map(n=>'Station '+n).join(', ')+'.';
+    return;
+  }
+  $('#testLocked').hidden=true;$('#testOpen').hidden=false;
+  ensureOrder();
+  $('#quiz').innerHTML=Q.map((q,i)=>`<div class="q"><fieldset><legend><small>Frage ${i+1}, Station ${q.s}</small>${q.q}</legend>${S.quiz.order[i].map(o=>`<label><input type="radio" name="q${i}" value="${o}" ${S.quiz.answers[i]===o?'checked':''}><span>${q.a[o]}</span></label>`).join('')}</fieldset></div>`).join('');
+  $$('#quiz input').forEach(r=>r.addEventListener('change',()=>{S.quiz.answers[+r.name.slice(1)]=+r.value;save();progress();}));
+  progress();
+}
+function progress(){const n=Object.keys(S.quiz.answers).length;$('#quizProgress').textContent=`${n} von ${Q.length} Fragen beantwortet`;}
+$('#quizSubmit').addEventListener('click',()=>{
+  const n=Object.keys(S.quiz.answers).length;
+  $('#confirmText').textContent = n<Q.length ? `Du hast erst ${n} von ${Q.length} Fragen beantwortet. Unbeantwortete Fragen zählen als falsch. Trotzdem abgeben?` : 'Du hast alle Fragen beantwortet. Nach dem Abgeben kannst du nichts mehr ändern.';
+  $('#quizConfirm').hidden=false;$('#confirmYes').focus();
+});
+$('#confirmNo').addEventListener('click',()=>{$('#quizConfirm').hidden=true;});
+function dayStr(ts){const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fnv(str){let h=0x811c9dc5;for(const ch of str){h^=ch.codePointAt(0);h=Math.imul(h,0x01000193)>>>0;}return h>>>0;}
+function makeCode(name,klasse,score,day){
+  const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,' ');
+  const h1=fnv([norm(name),norm(klasse),score,day,SALT].join('|')), h2=fnv(SALT+h1);
+  const s=(h1.toString(36)+h2.toString(36)).toUpperCase().replace(/[^A-Z0-9]/g,'');
+  return s.slice(0,3)+'-'+s.slice(3,6);
+}
+$('#confirmYes').addEventListener('click',()=>{
+  let score=0;const per={1:0,2:0,3:0,4:0,5:0,6:0};
+  Q.forEach((q,i)=>{if(S.quiz.answers[i]===0){score++;per[q.s]++;}});
+  let tries=1;try{tries=(+localStorage.getItem(KEY_TRIES)||0)+1;localStorage.setItem(KEY_TRIES,tries);}catch(e){}
+  const end=Date.now();
+  S.quiz.result={score,max:Q.length,per,endTs:end,day:dayStr(end),min:Math.round((end-S.start)/60000),tries,code:makeCode(S.name,S.klasse,score,dayStr(end))};
+  S.quiz.submitted=true;save();updateMap();renderTest();tick();window.scrollTo({top:0,behavior:'instant'});
+});
+function renderResult(){
+  const r=S.quiz.result;const d=new Date(r.endTs);
+  const time=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr';
+  $('#card').innerHTML=`<div class="card-top"><div><div class="nm">${esc(S.name)}</div><div class="meta">Klasse ${esc(S.klasse)}</div><div class="meta">Abgegeben am ${time}</div><div class="meta">Bearbeitungszeit ${r.min} Minuten${r.tries>1?` · Abgabe Nr. ${r.tries} auf diesem Rechner`:''}</div></div><div class="score"><b>${r.score}</b><span>von ${r.max} Punkten</span><span>${Math.round(r.score/r.max*100)} %</span></div></div>
+  <div class="per">${[1,2,3,4,5,6].map(n=>`<div class="r"><span>${n} · ${NAMES[n]}</span><span class="tr"><span style="width:${r.per[n]/3*100}%;background:${COLORS[n]}"></span></span><b>${r.per[n]} / 3</b></div>`).join('')}</div>
+  <div class="code"><span>Prüfcode für deine Lehrkraft</span><b>${r.code}</b></div>`;
+  $('#myNotes').innerHTML=`<h3>Deine Notizen für die Gruppenarbeit</h3><dl>${[1,2,3,4,5,6].map(n=>`<dt>${NAMES[n]}</dt><dd>Chance: ${esc(S.notes[n+'.c']||'keine Notiz')}</dd><dd>Risiko: ${esc(S.notes[n+'.r']||'keine Notiz')}</dd>`).join('')}</dl>`;
+  ensureOrder();
+  $('#review').innerHTML=Q.map((q,i)=>{const mine=S.quiz.answers[i];return `<div class="q"><fieldset disabled><legend><small>Frage ${i+1}, Station ${q.s}</small>${q.q}</legend>${S.quiz.order[i].map(o=>`<label class="${o===mine?(o===0?'is-right':'is-wrong'):''}"><input type="radio" ${o===mine?'checked':''}><span>${q.a[o]}</span></label>`).join('')}</fieldset></div>`;}).join('');
+}
+$('#printBtn').addEventListener('click',()=>window.print());
+$('#dlBtn').addEventListener('click',()=>{
+  const r=S.quiz.result;
+  const lines=['Netz und Gesellschaft – Ergebnis der Einzelarbeit','',`Name: ${S.name}`,`Klasse: ${S.klasse}`,`Abgegeben: ${new Date(r.endTs).toLocaleString('de-DE')}`,`Bearbeitungszeit: ${r.min} Minuten`,`Punkte: ${r.score} von ${r.max}`,`Prüfcode: ${r.code}`,'','Punkte pro Station:'];
+  [1,2,3,4,5,6].forEach(n=>lines.push(`  ${n} ${NAMES[n]}: ${r.per[n]} von 3`));
+  lines.push('','Notizen für die Gruppenarbeit:');
+  [1,2,3,4,5,6].forEach(n=>{lines.push('',NAMES[n],'  Chance: '+(S.notes[n+'.c']||'-'),'  Risiko: '+(S.notes[n+'.r']||'-'));});
+  const blob=new Blob([lines.join('\r\n')],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=('Ergebnis_'+S.name.replace(/[^A-Za-zÄÖÜäöüß0-9]+/g,'_')+'.txt');document.body.appendChild(a);a.click();a.remove();
+});
+
+/* ---------- Lehrkraft ---------- */
+const dlg=$('#teacher');
+$('#teacherOpen').addEventListener('click',()=>{$('#tDate').value=dayStr(Date.now());$('#tRes').textContent='';$('#tResetRes').textContent='';dlg.showModal();});
+$('#tClose').addEventListener('click',()=>dlg.close());
+$('#tCheck').addEventListener('click',()=>{
+  const c=makeCode($('#tName').value,$('#tClass').value,parseInt($('#tScore').value,10),$('#tDate').value);
+  const ok=c===$('#tCode').value.trim().toUpperCase();
+  $('#tRes').style.color=ok?'var(--ok)':'var(--bad)';
+  $('#tRes').textContent=ok?'Der Code passt zu Name, Klasse, Punkten und Datum.':'Der Code passt nicht. Prüfe Schreibweise von Name und Klasse.';
+});
+$('#tReset').addEventListener('click',()=>{
+  if($('#tPin').value!==PIN){$('#tResetRes').style.color='var(--bad)';$('#tResetRes').textContent='Die PIN ist falsch.';return;}
+  try{localStorage.removeItem(KEY);}catch(e){}
+  location.reload();
+});
+
+/* ---------- Init ---------- */
+showWho();startView();applyFlags();updateMap();
+go(S.name?S.current:'start');
+})();
+</script>
+</body>
+</html>
